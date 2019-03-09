@@ -17,15 +17,35 @@ export enum JobState {
   Running = 'running',
 }
 
-async function ConvertFile(sourcefile: string, targetfile: string): Promise<void> {
-  console.log(`[CONVERT] ${sourcefile}`)
-  const success = await EncodeFile(sourcefile, targetfile)
+async function ConvertFile(sourcefile: string, cache: CacheData): Promise<void> {
+  const targetfile = `${sourcefile}.processing`
 
-  if (success) {
-    const tempfile = `${sourcefile}.processing.tmp`
-    await fs.rename(sourcefile, tempfile)
-    await fs.rename(targetfile, sourcefile)
-    await fs.delete(tempfile)
+  try {
+    if (await fs.exists(targetfile)) {
+      return null
+    }
+
+    if (cache.converted.some(converted => converted === sourcefile)) {
+      return null
+    }
+
+    const file = await GetFileEncodeInfo(sourcefile)
+
+    if (file.converted === false && AllowConversion) {
+      console.log(`[CONVERT] ${sourcefile}`)
+      const success = await EncodeFile(sourcefile, targetfile)
+
+      if (success) {
+        const tempfile = `${sourcefile}.processing.tmp`
+        await fs.rename(sourcefile, tempfile)
+        await fs.rename(targetfile, sourcefile)
+        await fs.delete(tempfile)
+      }
+    }
+  } catch {
+    if (await fs.exists(targetfile)) {
+      await fs.delete(targetfile)
+    }
   }
 }
 
@@ -34,31 +54,9 @@ async function ConvertFiles(directory: string, cache: CacheData): Promise<void> 
   const globs = await fs.globs(MediaFileGlobs, directory)
 
   console.log(`[PROCESSING] ${directory}`)
-  const converters = globs.map(sourcefile => async () => {
-    const targetfile = `${sourcefile}.processing`
+  const converters = globs.map(sourcefile => () => ConvertFile(sourcefile, cache))
 
-    try {
-      if (await fs.exists(targetfile)) {
-        return null
-      }
-
-      if (cache.converted.some(converted => converted === sourcefile)) {
-        return null
-      }
-
-      const file = await GetFileEncodeInfo(sourcefile)
-
-      if (file.converted === false && AllowConversion) {
-        await ConvertFile(sourcefile, targetfile)
-      }
-    } catch {
-      if (await fs.exists(targetfile)) {
-        await fs.delete(targetfile)
-      }
-    }
-  })
-
-  const options: Throttle.Options<ConverterQueueItem> = {
+  const options: Throttle.Options<void> = {
     maxInProgress: 5,
   }
 
