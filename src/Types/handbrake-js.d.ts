@@ -1,6 +1,6 @@
-import { EventEmitter } from 'events'
-
 declare module 'handbrake-js' {
+  import { EventEmitter } from 'events'
+
   export interface HandbrakeOptions {
     input: string
     output: string

@@ -25,4 +25,5 @@ RUN set -ex \
 #------------------------------------------------------------------------------
 FROM BASE
 COPY --from=BUILD /build/dist /app/dist
+VOLUME /mnt/media
 CMD [/bin/node /app/dist/plexify.js]

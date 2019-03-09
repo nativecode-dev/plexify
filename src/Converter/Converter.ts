@@ -47,7 +47,7 @@ export function EncodeFile(source: string, target: string): Promise<boolean> {
   const options: HandbrakeOptions = {
     input: 'src/data/brettrossi.17.01.21.brett.rossi.interview.turns.naughty.mp4',
     output: 'src/data/brettrossi.17.01.21.brett.rossi.interview.turns.naughty.mp4~',
-    preset: 'Normal',
+    preset: 'Fast 1080p30',
   }
 
   return new Promise<boolean>((resolve, reject) => {
