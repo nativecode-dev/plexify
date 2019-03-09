@@ -1,4 +1,4 @@
-export interface ConverterQueueItem {
+export interface ConverterInfo {
   converted: boolean
   filename: string
 }
