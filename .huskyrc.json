@@ -1,7 +1,0 @@
-{
-  "husky": {
-    "hooks": {
-      "pre-commit": "tslint --project tsconfig.json --config tslint.json"
-    }
-  }
-}

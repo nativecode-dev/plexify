@@ -26,6 +26,11 @@
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "^3.3.3333"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tslint --project tsconfig.json --config tslint.json"
+    }
+  },
   "scripts": {
     "build": "rimraf dist && tsc --project tsconfig.json",
     "prebuild": "tslint --project tsconfig.json --config tslint.json",
