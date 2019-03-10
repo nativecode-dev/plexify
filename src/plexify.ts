@@ -2,93 +2,85 @@ import * as Throttle from 'promise-parallel-throttle'
 
 import { fs } from '@nofrills/fs'
 import { scheduleJob, RecurrenceRule, Job } from 'node-schedule'
-import { Stack } from 'stack-typescript'
 
-import { CacheData } from './Data/CacheData'
 import { GetFileEncodeInfo, EncodeFile } from './Converter/Converter'
-import { LoadCache as RestoreCache, SaveCache } from './Data/CacheFunctions'
 import { PlexifyOptions } from './Options/PlexifyOptions'
+import { Storage } from './plexifydb'
+import { PlexifyDryRun, PlexifyMountPoint, PlexifyPreset, PlexifyRedis } from './env'
+import { ConverterInfo } from './Converter/ConverterInfo'
 
-const MediaFileExtensions: string[] = ['avi', 'mkv', 'mp4']
-const MediaFileGlobs: string[] = MediaFileExtensions.map(extension => `**/*.${extension}`)
-
-const PlexifyEtcdHosts: string[] = process.env.PLEXIFY_ETCD_HOSTS
-  ? process.env.PLEXIFY_ETCD_HOSTS.split(',')
-  : ['localhost']
-
-const PlexifyMountPoint: string = process.env.PLEXIFY_MOUNT_POINT || '/mnt/media'
-const PlexifyPreset: string = process.env.PLEXIFY_PRESET || 'Fast 1080p30'
-const PlexifyDryRun: boolean = process.env.PLEXIFY_DRY_RUN ? Boolean(process.env.PLEXIFY_DRY_RUN) : true
+const MediaFileExtensions: string[] = ['avi', 'mkv', 'mp4', 'wmv']
+const MediaFileGlobs: string[] = MediaFileExtensions.map(ext => `**/*.${ext}`)
 
 const DefaultPliexifyOptions: PlexifyOptions = {
-  etcdHosts: PlexifyEtcdHosts,
   dryrun: PlexifyDryRun,
   mount: PlexifyMountPoint,
   preset: PlexifyPreset,
+  redis: PlexifyRedis,
 }
 
-async function ConvertFile(options: PlexifyOptions, sourcefile: string, cache: CacheData): Promise<string> {
-  const cachekey = Buffer.from(`/plexify/${sourcefile.replace('/', '_')}`).toString('base64')
+async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise<string> {
   const targetfile = `${sourcefile}.processing`
   const tempfile = `${targetfile}.tmp`
 
+  let info = await Storage.get<ConverterInfo>(sourcefile)
+
+  if (info === null) {
+    info = await GetFileEncodeInfo(sourcefile)
+    await Storage.set<ConverterInfo>(sourcefile, info)
+  }
+
+  if (await fs.exists(targetfile)) {
+    await fs.delete(targetfile)
+  }
+
   try {
-    if (await fs.exists(targetfile)) {
-      return
-    }
+    if (info.converted === false && options.dryrun === false) {
+      console.log(`[CONVERT] ${sourcefile} [${options.preset}]`)
+      const result = await EncodeFile(sourcefile, targetfile)
 
-    if (cache.processed.some(x => x.filename === sourcefile && x.converted)) {
-      return
-    }
+      if (result.success) {
+        if ((await fs.rename(sourcefile, tempfile)) === false) {
+          throw Error(`failed to rename ${sourcefile} to ${tempfile}`)
+        }
 
-    const file = await GetFileEncodeInfo(sourcefile)
-    cache.processed.push(file)
+        if ((await fs.rename(targetfile, sourcefile)) === false) {
+          throw Error(`failed to rename ${targetfile} to ${sourcefile}`)
+        }
 
-    if (file.converted === false && options.dryrun === false) {
-      console.log(`[CONVERT] ${sourcefile}`)
-      const results = await EncodeFile(sourcefile, targetfile)
+        if ((await fs.delete(tempfile)) === false) {
+          throw Error(`failed to delete ${tempfile}`)
+        }
 
-      if (results.success) {
-        await fs.rename(sourcefile, tempfile)
-        await fs.rename(targetfile, sourcefile)
-        await fs.delete(tempfile)
+        info.converted = true
+        await Storage.set<ConverterInfo>(sourcefile, info)
       }
-    } else if (file.converted === false && options.dryrun) {
+    } else if (info.converted === false && options.dryrun) {
       console.log(`[CONVERT-DRYRUN] ${sourcefile}`)
     }
-
-    return sourcefile
-  } catch {
-    if (await fs.exists(targetfile)) {
-      await fs.delete(targetfile)
-    }
-
+  } finally {
     if (await fs.exists(tempfile)) {
       await fs.delete(tempfile)
     }
+    return sourcefile
   }
 }
 
-async function ConvertFiles(options: PlexifyOptions, directory: string, cache: CacheData): Promise<void> {
-  console.log(`[SCANNING] ${directory}`)
-  const globs = await fs.globs(MediaFileGlobs, directory)
+async function ConvertFiles(options: PlexifyOptions): Promise<void> {
+  console.log(`[SCANNING] ${options.mount}`)
+  const globs = await fs.globs(MediaFileGlobs, options.mount)
 
-  console.log(`[PROCESSING] ${globs.length.toLocaleString()} files from ${directory}`)
-  const converters = globs.map(sourcefile => () => ConvertFile(options, sourcefile, cache))
+  console.log(`[PROCESSING] ${globs.length.toLocaleString()} files from ${options.mount}`)
+  const converters = globs.map(sourcefile => () => ConvertFile(options, sourcefile))
 
   const ThrottleOptions: Throttle.Options<string> = {
     maxInProgress: 5,
-    progressCallback: async result => {
-      if (result.amountDone % 100 === 0) {
-        await SaveCache(cache)
-      }
-    },
   }
 
   await Throttle.all(converters, ThrottleOptions)
 }
 
-async function Main(options: PlexifyOptions, directory: string): Promise<Job> {
+async function Main(options: PlexifyOptions): Promise<Job> {
   console.log(JSON.stringify(options, null, 2))
 
   const displayNextInvocation = (rule: RecurrenceRule, date?: Date): Date => {
@@ -99,26 +91,24 @@ async function Main(options: PlexifyOptions, directory: string): Promise<Job> {
   }
 
   const rule: RecurrenceRule = new RecurrenceRule()
-  const state: Stack<CacheData> = new Stack<CacheData>()
+  let running = false
 
   return new Promise<Job>(resolve => {
     displayNextInvocation(rule)
 
     const job = scheduleJob('process-conversions', rule, async () => {
-      if (state.size !== 0) {
+      if (running) {
         return
       }
 
-      const cache = await RestoreCache()
-      state.push(cache)
-      console.log(`[RUNNING] ${job.name}`)
+      running = true
 
       try {
-        await ConvertFiles(options, directory, cache)
-        await SaveCache(cache)
+        console.log(`[RUNNING] ${job.name}`)
+        await ConvertFiles(options)
         displayNextInvocation(rule)
       } finally {
-        state.pop()
+        running = false
       }
     })
 
@@ -130,4 +120,4 @@ async function Main(options: PlexifyOptions, directory: string): Promise<Job> {
   })
 }
 
-Main(DefaultPliexifyOptions, '/mnt/media').catch(console.log)
+Main(DefaultPliexifyOptions).catch(console.log)

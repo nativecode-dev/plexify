@@ -30,7 +30,6 @@ RUN set -ex \
 #------------------------------------------------------------------------------
 FROM BASE
 COPY --from=BUILD /build/dist /app/dist
-ENV PLEXIFY_ETCD_HOSTS="localhost,etcd"
 ENV PLEXIFY_MOUNT_POINT="/mnt/media"
 ENV PLEXIFY_DRYRUN="true"
 WORKDIR /app

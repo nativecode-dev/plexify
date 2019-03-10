@@ -12,22 +12,19 @@ export interface EncodeResults {
 }
 
 export function OutputLines(buffer: Buffer): string[] {
-  return buffer.toString().split('\n')
+  return buffer
+    .toString()
+    .replace('\r', '')
+    .split('\n')
 }
 
 export async function GetFileEncodeInfo(filename: string): Promise<ConverterInfo> {
-  try {
-    const info = await GetMediaInfo(filename)
+  const info = await GetMediaInfo(filename)
 
-    return {
-      converted: info.video.some(vid => vid.profile !== 'High@L4'),
-      filename,
-    }
-  } catch {
-    return {
-      converted: true,
-      filename,
-    }
+  return {
+    converted: info.video.some(vid => vid.profile !== 'High@L4'),
+    filename,
+    media: info,
   }
 }
 
@@ -58,12 +55,23 @@ export function EncodeFile(source: string, target: string): Promise<EncodeResult
 
   return new Promise<EncodeResults>((resolve, reject) => {
     spawn(options)
-      .on(HandbrakeEvent.Cancelled, () => reject(results))
+      .on(HandbrakeEvent.Cancelled, () => {
+        console.log(`Encoding ${source} cancelled`)
+        results.success = false
+        reject(results)
+      })
       .on(HandbrakeEvent.Complete, () => {
+        console.log(`Encoding ${source} completed`)
         results.success = true
         resolve(results)
       })
-      .on(HandbrakeEvent.Error, () => reject(results))
-      .on(HandbrakeEvent.Output, (buffer: Buffer) => (results.output = results.output.concat(OutputLines(buffer))))
+      .on(HandbrakeEvent.Error, (error: Error) => {
+        console.log(`Encoding ${source} errored: ${error}`)
+        reject(error)
+      })
+      .on(HandbrakeEvent.Output, (buffer: Buffer) => {
+        const lines = OutputLines(buffer)
+        results.output = results.output.concat(lines)
+      })
   })
 }
