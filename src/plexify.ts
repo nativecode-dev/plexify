@@ -22,10 +22,18 @@ const DefaultPliexifyOptions: PlexifyOptions = {
 async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise<string> {
   const targetfile = `${sourcefile}.processing`
   const tempfile = `${targetfile}.tmp`
+  const lock = `lock-${sourcefile}`
+
+  const lockfile = await Storage.get<boolean>(lock)
+
+  if (lockfile === true) {
+    return sourcefile
+  }
 
   let info = await Storage.get<ConverterInfo>(sourcefile)
 
   if (info === null) {
+    await Storage.set<boolean>(lock, true)
     info = await GetFileEncodeInfo(sourcefile)
     await Storage.set<ConverterInfo>(sourcefile, info)
   }
@@ -62,6 +70,8 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
     if (await fs.exists(tempfile)) {
       await fs.delete(tempfile)
     }
+
+    await Storage.delete(lock)
     return sourcefile
   }
 }
