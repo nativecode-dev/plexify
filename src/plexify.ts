@@ -43,9 +43,17 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
     await fs.delete(targetfile)
   }
 
+  const newfile = MediaFileExtensions.reduce((result, ext) => {
+    const extension = `.${ext}`
+    if (sourcefile.endsWith(extension)) {
+      return sourcefile.replace(extension, '.mp4')
+    }
+    return result
+  })
+
   try {
     if (info.converted === false && options.dryrun === false) {
-      console.log(`[CONVERT] ${sourcefile} [${options.preset}]`)
+      console.log(`[CONVERT] ${sourcefile} -> ${newfile} [${options.preset}]`)
       const result = await EncodeFile(sourcefile, targetfile)
 
       if (result.success) {
@@ -53,8 +61,8 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
           throw Error(`failed to rename ${sourcefile} to ${tempfile}`)
         }
 
-        if ((await fs.rename(targetfile, sourcefile)) === false) {
-          throw Error(`failed to rename ${targetfile} to ${sourcefile}`)
+        if ((await fs.rename(targetfile, newfile)) === false) {
+          throw Error(`failed to rename ${targetfile} to ${newfile}`)
         }
 
         if ((await fs.delete(tempfile)) === false) {
@@ -63,10 +71,14 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
 
         info.converted = true
         await Storage.set<ConverterInfo>(sourcefile, info)
+      } else {
+        result.output.forEach(console.log)
       }
     } else if (info.converted === false && options.dryrun) {
-      console.log(`[CONVERT-DRYRUN] ${sourcefile}`)
+      console.log(`[CONVERT-DRYRUN] ${sourcefile} -> ${newfile}`)
     }
+  } catch (error) {
+    console.log(`[ERROR] ${sourcefile}::${error.message}`)
   } finally {
     if (await fs.exists(tempfile)) {
       await fs.delete(tempfile)

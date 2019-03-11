@@ -42,9 +42,13 @@ export function GetMediaInfo(source: string): Promise<MediaInfo> {
 
 export function EncodeFile(source: string, target: string): Promise<EncodeResults> {
   const options: HandbrakeOptions = {
+    'all-audio': true,
+    'audio-lang-list': 'und',
     input: source,
+    optimize: true,
     output: target,
     preset: 'Fast 1080p30',
+    subtitle: 'scan',
   }
 
   const results: EncodeResults = {
@@ -54,24 +58,28 @@ export function EncodeFile(source: string, target: string): Promise<EncodeResult
   }
 
   return new Promise<EncodeResults>((resolve, reject) => {
+    let errored = false
     spawn(options)
       .on(HandbrakeEvent.Cancelled, () => {
         console.log(`Encoding ${source} cancelled`)
         results.success = false
+        errored = true
         reject(results)
       })
       .on(HandbrakeEvent.Complete, () => {
         console.log(`Encoding ${source} completed`)
-        results.success = true
+        results.success = errored
         resolve(results)
       })
       .on(HandbrakeEvent.Error, (error: Error) => {
         console.log(`Encoding ${source} errored: ${error}`)
+        results.success = false
+        errored = true
         reject(error)
       })
       .on(HandbrakeEvent.Output, (buffer: Buffer) => {
         const lines = OutputLines(buffer)
-        results.output = results.output.concat(lines)
+        results.output = results.output.concat(...lines)
       })
   })
 }

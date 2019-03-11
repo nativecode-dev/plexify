@@ -2,10 +2,14 @@ declare module 'handbrake-js' {
   import { EventEmitter } from 'events'
 
   export interface HandbrakeOptions {
+    'all-audio'?: boolean
+    'audio-lang-list'?: string
     input: string
+    optimize?: boolean
     output: string
     preset: string
     rotate?: number
+    subtitle?: string
   }
 
   export type HandbrakeExecDone = (...args: any[]) => void
