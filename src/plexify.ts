@@ -26,14 +26,15 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
 
   const lockfile = await Storage.get<boolean>(lock)
 
-  if (lockfile === true) {
+  if (lockfile !== null) {
     return sourcefile
   }
+
+  await Storage.set<boolean>(lock, true)
 
   let info = await Storage.get<ConverterInfo>(sourcefile)
 
   if (info === null) {
-    await Storage.set<boolean>(lock, true)
     info = await GetFileEncodeInfo(sourcefile)
     await Storage.set<ConverterInfo>(sourcefile, info)
   }
