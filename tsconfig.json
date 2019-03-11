@@ -10,12 +10,13 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
+    "noImplicitAny": true,
     "importHelpers": true,
     "strictNullChecks": true,
     "target": "es5",
     "typeRoots": [
-      "node_modules/@types",
-      "src/Types"
+      "./node_modules/@types",
+      "./src/Types"
     ],
     "lib": [
       "es2018"

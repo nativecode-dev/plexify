@@ -33,9 +33,9 @@ export function GetMediaInfo(source: string): Promise<MediaInfo> {
     json_mediainfo(source, (error: Error, info: any) => {
       if (error) {
         reject(error)
-        return
+      } else {
+        resolve(info as MediaInfo)
       }
-      resolve(info as MediaInfo)
     })
   })
 }

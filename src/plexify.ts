@@ -24,34 +24,34 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
   const tempfile = `${targetfile}.tmp`
   const lock = `lock-${sourcefile}`
 
-  const lockfile = await Storage.get<boolean>(lock)
-
-  if (lockfile !== null) {
-    return sourcefile
-  }
-
-  await Storage.set<boolean>(lock, true)
-
-  let info = await Storage.get<ConverterInfo>(sourcefile)
-
-  if (info === null) {
-    info = await GetFileEncodeInfo(sourcefile)
-    await Storage.set<ConverterInfo>(sourcefile, info)
-  }
-
-  if (await fs.exists(targetfile)) {
-    await fs.delete(targetfile)
-  }
-
-  const newfile = MediaFileExtensions.reduce((result, ext) => {
-    const extension = `.${ext}`
-    if (sourcefile.endsWith(extension)) {
-      return sourcefile.replace(extension, '.mp4')
-    }
-    return result
-  })
-
   try {
+    const lockfile = await Storage.get<boolean>(lock)
+
+    if (lockfile !== null) {
+      return sourcefile
+    }
+
+    await Storage.set<boolean>(lock, true)
+
+    let info = await Storage.get<ConverterInfo>(sourcefile)
+
+    if (info === null) {
+      info = await GetFileEncodeInfo(sourcefile)
+      await Storage.set<ConverterInfo>(sourcefile, info)
+    }
+
+    if (await fs.exists(targetfile)) {
+      await fs.delete(targetfile)
+    }
+
+    const newfile = MediaFileExtensions.reduce((result, ext) => {
+      const extension = `.${ext}`
+      if (sourcefile.endsWith(extension)) {
+        return sourcefile.replace(extension, '.mp4')
+      }
+      return result
+    })
+
     if (info.converted === false && options.dryrun === false) {
       console.log(`[CONVERT] ${sourcefile} -> ${newfile} [${options.preset}]`)
       const result = await EncodeFile(sourcefile, targetfile)
