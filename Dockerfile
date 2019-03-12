@@ -36,7 +36,8 @@ RUN set -ex \
   && mkdir /mnt/media \
   && which HandBrakeCLI \
   && which mediainfo \
+  && which node \
   ;
 VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/local/bin/node", "plexify.js"]
+CMD ["/usr/bin/node", "plexify.js"]
