@@ -3,11 +3,12 @@ import * as Throttle from 'promise-parallel-throttle'
 import { fs } from '@nofrills/fs'
 import { scheduleJob, RecurrenceRule, Job } from 'node-schedule'
 
-import { GetFileEncodeInfo, EncodeFile } from './Converter/Converter'
-import { PlexifyOptions } from './Options/PlexifyOptions'
+import { Logger } from './logging'
 import { Storage } from './plexifydb'
-import { PlexifyDryRun, PlexifyMountPoint, PlexifyPreset, PlexifyRedis } from './env'
+import { PlexifyOptions } from './Options/PlexifyOptions'
 import { ConverterInfo } from './Converter/ConverterInfo'
+import { GetFileEncodeInfo, EncodeFile } from './Converter/Converter'
+import { PlexifyDryRun, PlexifyMountPoint, PlexifyPreset, PlexifyRedis } from './env'
 
 const MediaFileExtensions: string[] = ['avi', 'mkv', 'mp4', 'wmv']
 const MediaFileGlobs: string[] = MediaFileExtensions.map(ext => `**/*.${ext}`)
@@ -53,7 +54,7 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
     })
 
     if (info.converted === false && options.dryrun === false) {
-      console.log(`[CONVERT] ${sourcefile} -> ${newfile} [${options.preset}]`)
+      Logger.info(`[CONVERT] ${sourcefile} -> ${newfile} [${options.preset}]`)
       const result = await EncodeFile(sourcefile, targetfile)
 
       if (result.success) {
@@ -72,13 +73,14 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
         info.converted = true
         await Storage.set<ConverterInfo>(sourcefile, info)
       } else {
-        result.output.forEach(console.log)
+        result.output.forEach(Logger.info)
       }
     } else if (info.converted === false && options.dryrun) {
-      console.log(`[CONVERT-DRYRUN] ${sourcefile} -> ${newfile}`)
+      Logger.info(`[CONVERT-DRYRUN] ${sourcefile} -> ${newfile}`)
     }
   } catch (error) {
-    console.log(`[ERROR] ${sourcefile}::${error.message}`)
+    Logger.info(`[ERROR] ${sourcefile}::${error.message}`)
+    Logger.debug(error)
   } finally {
     if (await fs.exists(tempfile)) {
       await fs.delete(tempfile)
@@ -90,10 +92,10 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
 }
 
 async function ConvertFiles(options: PlexifyOptions): Promise<void> {
-  console.log(`[SCANNING] ${options.mount}`)
+  Logger.info(`[SCANNING] ${options.mount}`)
   const globs = await fs.globs(MediaFileGlobs, options.mount)
 
-  console.log(`[PROCESSING] ${globs.length.toLocaleString()} files from ${options.mount}`)
+  Logger.info(`[PROCESSING] ${globs.length.toLocaleString()} files from ${options.mount}`)
   const converters = globs.map(sourcefile => () => ConvertFile(options, sourcefile))
 
   const ThrottleOptions: Throttle.Options<string> = {
@@ -104,12 +106,12 @@ async function ConvertFiles(options: PlexifyOptions): Promise<void> {
 }
 
 async function Main(options: PlexifyOptions): Promise<Job> {
-  console.log(JSON.stringify(options, null, 2))
+  Logger.info(JSON.stringify(options, null, 2))
 
   const displayNextInvocation = (rule: RecurrenceRule, date?: Date): Date => {
     const now = date || new Date()
     const next = rule.nextInvocationDate(now)
-    console.log(`[NEXT] ${next.toLocaleString()}`)
+    Logger.info(`[NEXT] ${next.toLocaleString()}`)
     return next
   }
 
@@ -127,7 +129,7 @@ async function Main(options: PlexifyOptions): Promise<Job> {
       running = true
 
       try {
-        console.log(`[RUNNING] ${job.name}`)
+        Logger.info(`[RUNNING] ${job.name}`)
         await ConvertFiles(options)
         displayNextInvocation(rule)
       } finally {
@@ -136,11 +138,11 @@ async function Main(options: PlexifyOptions): Promise<Job> {
     })
 
     process.on('SIGTERM', () => {
-      console.log('[SIGTERM]')
+      Logger.info('[SIGTERM]')
       job.cancel(false)
       resolve(job)
     })
   })
 }
 
-Main(DefaultPliexifyOptions).catch(console.log)
+Main(DefaultPliexifyOptions).catch(Logger.info)

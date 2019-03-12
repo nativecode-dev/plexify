@@ -1,5 +1,7 @@
 import { createClient, ClientOpts, RedisClient } from 'redis'
 
+import { Logger } from '../logging'
+
 export class DataStore {
   private readonly client: RedisClient
 
@@ -13,6 +15,7 @@ export class DataStore {
         if (error) {
           reject(error)
         } else {
+          Logger.debug(`[REDIS:DELETE] ${key} ${value}`)
           resolve()
         }
       }
@@ -26,7 +29,12 @@ export class DataStore {
         if (error) {
           reject(error)
         } else if (value && value !== '') {
-          resolve(JSON.parse(value))
+          Logger.debug(`[REDIS:GET] ${key} ${value}`)
+          try {
+            resolve(JSON.parse(value))
+          } catch (e) {
+            reject(e)
+          }
         } else {
           resolve(null)
         }
@@ -40,9 +48,10 @@ export class DataStore {
       const handler = (error: Error | null, value: string) => {
         if (error) {
           reject(error)
+        } else {
+          Logger.debug(`[REDIS:SET] ${key} ${value}`)
+          resolve(value === 'OK')
         }
-
-        resolve(value === 'OK')
       }
       this.client.set(key, JSON.stringify(value), handler)
     })

@@ -1,9 +1,10 @@
 import json_mediainfo from 'json-mediainfo'
 import { spawn, HandbrakeOptions } from 'handbrake-js'
 
+import { Logger } from '../logging'
+import { ConverterInfo } from './ConverterInfo'
 import { MediaInfo } from '../MediaInfo/MediaInfo'
 import { HandbrakeEvent } from '../Handbrake/HandbrakeEvent'
-import { ConverterInfo } from './ConverterInfo'
 
 export interface EncodeResults {
   filename: string
@@ -61,18 +62,18 @@ export function EncodeFile(source: string, target: string): Promise<EncodeResult
     let errored = false
     spawn(options)
       .on(HandbrakeEvent.Cancelled, () => {
-        console.log(`Encoding ${source} cancelled`)
+        Logger.info(`Encoding ${source} cancelled`)
         results.success = false
         errored = true
         reject(results)
       })
       .on(HandbrakeEvent.Complete, () => {
-        console.log(`Encoding ${source} completed`)
+        Logger.info(`Encoding ${source} completed`)
         results.success = errored
         resolve(results)
       })
       .on(HandbrakeEvent.Error, (error: Error) => {
-        console.log(`Encoding ${source} errored: ${error}`)
+        Logger.info(`Encoding ${source} errored: ${error}`)
         results.success = false
         errored = true
         reject(error)
