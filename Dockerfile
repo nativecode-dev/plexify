@@ -1,12 +1,11 @@
 # STAGE: Base Image
 #------------------------------------------------------------------------------
-FROM node:8-slim AS BASE
+FROM node:8-alpine AS BASE
 LABEL MAINTAINER=opensource@nativecode.com
 ENV DEBIAN_FRONTEND=noninteractive
-ENV DEBUG=plexify
 RUN set -ex \
-  && apt-get update \
-  && apt-get install handbrake-cli mediainfo -y \
+  && sed -i -e 's/v[[:digit:]]\.[[:digit:]]/edge/g' /etc/apk/repositories \
+  && apk upgrade --update-cache --available handbrake mediainfo \
   ;
 
 # STAGE: Build
@@ -16,6 +15,8 @@ COPY package-lock.json /build/package-lock.json
 COPY package.json /build/package.json
 COPY tsconfig.json /build/tsconfig.json
 COPY tslint.json /build/tslint.json
+COPY webpack.config.ts /build/webpack.config.ts
+COPY aliases /build/aliases
 COPY src /build/src
 WORKDIR /build
 RUN set -ex \
@@ -26,13 +27,15 @@ RUN set -ex \
 # STAGE: Final
 #------------------------------------------------------------------------------
 FROM BASE
-COPY --from=BUILD /build/dist /app
+ENV DEBUG=plexify*
 ENV PLEXIFY_MOUNT_POINT="/mnt/media"
 ENV PLEXIFY_DRYRUN="true"
+COPY --from=BUILD /build/dist /app
 WORKDIR /app
 RUN set -ex \
   && mkdir /root/.plexify \
   && mkdir /mnt/media \
   ;
+VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/local/bin/node", "/app/dist/plexify.js"]
+CMD ["/usr/local/bin/node", "plexify.js"]

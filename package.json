@@ -6,7 +6,7 @@
   "main": "dist/plexify",
   "name": "plexify",
   "typings": "dist/plexify",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "dependencies": {
     "@nofrills/fs": "^3.6.0",
     "@nofrills/lincoln-debug": "^3.6.6",
@@ -42,7 +42,7 @@
   "scripts": {
     "build": "rimraf dist && webpack-cli",
     "prebuild": "tslint --project tsconfig.json --config tslint.json",
-    "build-docker": "docker build -t nativecode/plexify:latest .",
+    "build-docker": "docker build --rm -t nativecode/plexify:latest .",
     "test": "docker run --rm --name plexify-debug -e PLEXIFY_DRYRUN=false --mount type=bind,src=/mnt/media,dst=/mnt/media nativecode/plexify:latest",
     "pretest": "npm run build-docker",
     "push": "docker push nativecode/plexify:latest",
