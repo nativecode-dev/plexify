@@ -1,11 +1,10 @@
 # STAGE: Base Image
 #------------------------------------------------------------------------------
-FROM node:8-alpine AS BASE
+FROM xataz/alpine:edge AS BASE
 LABEL MAINTAINER=opensource@nativecode.com
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -ex \
-  && sed -i -e 's/v[[:digit:]]\.[[:digit:]]/edge/g' /etc/apk/repositories \
-  && apk upgrade --update-cache --available handbrake mediainfo \
+  && apk add --no-cache handbrake mediainfo nodejs nodejs-npm \
   ;
 
 # STAGE: Build
@@ -35,6 +34,8 @@ WORKDIR /app
 RUN set -ex \
   && mkdir /root/.plexify \
   && mkdir /mnt/media \
+  && which HandBrakeCLI \
+  && which mediainfo \
   ;
 VOLUME /root/.plexify
 VOLUME /mnt/media

@@ -132,6 +132,8 @@ async function Main(options: PlexifyOptions): Promise<Job> {
         Logger.info(`[RUNNING] ${job.name}`)
         await ConvertFiles(options)
         displayNextInvocation(rule)
+      } catch (error) {
+        Logger.error(error)
       } finally {
         running = false
       }
