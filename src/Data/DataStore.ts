@@ -25,12 +25,13 @@ export class DataStore {
 
   get<T>(key: string): Promise<T | null> {
     return new Promise<T | null>((resolve, reject) => {
-      const handler = (error: Error | null, value: string) => {
+      this.client.get(key, (error: Error | null, value: string) => {
         if (error) {
           reject(error)
         } else if (value && value !== '') {
           Logger.debug(`[REDIS:GET] ${key} ${value}`)
           try {
+            Logger.debug(value)
             resolve(JSON.parse(value))
           } catch (e) {
             reject(e)
@@ -38,22 +39,20 @@ export class DataStore {
         } else {
           resolve(null)
         }
-      }
-      this.client.get(key, handler)
+      })
     })
   }
 
   set<T>(key: string, value: T): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      const handler = (error: Error | null, value: string) => {
+      this.client.set(key, JSON.stringify(value), (error: Error | null, value: string) => {
         if (error) {
           reject(error)
         } else {
           Logger.debug(`[REDIS:SET] ${key} ${value}`)
           resolve(value === 'OK')
         }
-      }
-      this.client.set(key, JSON.stringify(value), handler)
+      })
     })
   }
 }

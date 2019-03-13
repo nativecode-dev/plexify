@@ -46,6 +46,6 @@
     "pretest": "npm run docker-build",
     "docker-build": "docker build --rm -t nativecode/plexify:latest .",
     "docker-push": "docker push nativecode/plexify:latest",
-    "docker-prepush": "npm run docker-build"
+    "predocker-push": "npm run docker-build"
   }
 }

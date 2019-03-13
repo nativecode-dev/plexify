@@ -1,4 +1,4 @@
-declare type JsonMediaInfo = (error: Error, info: any) => void
+declare type JsonMediaInfo = (error: Error, info: any | null) => void
 declare function json_mediainfo(source: string, callback: JsonMediaInfo): void
 
 declare module 'json-mediainfo' {

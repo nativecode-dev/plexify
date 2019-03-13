@@ -8,16 +8,17 @@ import { Storage } from './plexifydb'
 import { PlexifyOptions } from './Options/PlexifyOptions'
 import { ConverterInfo } from './Converter/ConverterInfo'
 import { GetFileEncodeInfo, EncodeFile } from './Converter/Converter'
-import { PlexifyDryRun, PlexifyMountPoint, PlexifyPreset, PlexifyRedis } from './env'
+import { PlexifyDryRun, PlexifyMountPoint, PlexifyPreset, PlexifyRedisHost, PlexifyDelete } from './env'
 
 const MediaFileExtensions: string[] = ['avi', 'mkv', 'mp4', 'wmv']
 const MediaFileGlobs: string[] = MediaFileExtensions.map(ext => `**/*.${ext}`)
 
 const DefaultPliexifyOptions: PlexifyOptions = {
+  delete: PlexifyDelete,
   dryrun: PlexifyDryRun,
   mount: PlexifyMountPoint,
   preset: PlexifyPreset,
-  redis: PlexifyRedis,
+  redis: PlexifyRedisHost,
 }
 
 async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise<string> {
@@ -35,8 +36,10 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
     await Storage.set<boolean>(lock, true)
 
     let info = await Storage.get<ConverterInfo>(sourcefile)
+    Logger.debug(`[INFO-GET] ${lock}`)
 
     if (info === null) {
+      Logger.debug(`[MEDIAINFO] ${lock}`)
       info = await GetFileEncodeInfo(sourcefile)
       await Storage.set<ConverterInfo>(sourcefile, info)
     }
@@ -66,7 +69,7 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
           throw Error(`failed to rename ${targetfile} to ${newfile}`)
         }
 
-        if ((await fs.delete(tempfile)) === false) {
+        if (options.delete && (await fs.delete(tempfile)) === false) {
           throw Error(`failed to delete ${tempfile}`)
         }
 
@@ -82,7 +85,7 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
     Logger.info(`[ERROR] ${sourcefile}::${error.message}`)
     Logger.debug(error)
   } finally {
-    if (await fs.exists(tempfile)) {
+    if ((await fs.exists(tempfile)) && options.delete) {
       await fs.delete(tempfile)
     }
 
@@ -91,7 +94,7 @@ async function ConvertFile(options: PlexifyOptions, sourcefile: string): Promise
   }
 }
 
-async function ConvertFiles(options: PlexifyOptions): Promise<void> {
+async function ConvertFiles(options: PlexifyOptions): Promise<string[]> {
   Logger.info(`[SCANNING] ${options.mount}`)
   const globs = await fs.globs(MediaFileGlobs, options.mount)
 
@@ -102,7 +105,7 @@ async function ConvertFiles(options: PlexifyOptions): Promise<void> {
     maxInProgress: 5,
   }
 
-  await Throttle.all(converters, ThrottleOptions)
+  return Throttle.all(converters, ThrottleOptions)
 }
 
 async function Main(options: PlexifyOptions): Promise<Job> {

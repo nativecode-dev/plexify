@@ -1,3 +1,4 @@
+import * as child from 'child_process'
 import json_mediainfo from 'json-mediainfo'
 import { spawn, HandbrakeOptions } from 'handbrake-js'
 
@@ -31,13 +32,18 @@ export async function GetFileEncodeInfo(filename: string): Promise<ConverterInfo
 
 export function GetMediaInfo(source: string): Promise<MediaInfo> {
   return new Promise<MediaInfo>((resolve, reject) => {
-    json_mediainfo(source, (error: Error, info: any) => {
-      if (error) {
-        reject(error)
-      } else {
-        resolve(info as MediaInfo)
-      }
-    })
+    try {
+      json_mediainfo(source, (error: Error, info: any) => {
+        if (error) {
+          Logger.error(`[ERROR-MEDIAINFO] ${source}`, error, info)
+          reject(error)
+        } else {
+          resolve(info as MediaInfo)
+        }
+      })
+    } catch (e) {
+      reject(e)
+    }
   })
 }
 
