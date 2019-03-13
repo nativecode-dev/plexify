@@ -1,4 +1,3 @@
-import * as child from 'child_process'
 import json_mediainfo from 'json-mediainfo'
 import { spawn, HandbrakeOptions } from 'handbrake-js'
 

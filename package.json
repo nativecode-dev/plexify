@@ -39,6 +39,9 @@
       "pre-commit": "tslint --project tsconfig.json --config tslint.json"
     }
   },
+  "repository": {
+    "url": "https://github.com/nativecode-dev/plexify"
+  },
   "scripts": {
     "build": "rimraf dist && webpack-cli",
     "prebuild": "tslint --project tsconfig.json --config tslint.json",
