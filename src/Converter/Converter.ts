@@ -1,4 +1,4 @@
-import json_mediainfo from 'json-mediainfo'
+import mediainfo from 'mediainfo-parser'
 import { spawn, HandbrakeOptions } from 'handbrake-js'
 
 import { Logger } from '../logging'
@@ -23,7 +23,7 @@ export async function GetFileEncodeInfo(filename: string): Promise<ConverterInfo
   const info = await GetMediaInfo(filename)
 
   return {
-    converted: info.video.some(vid => vid.profile !== 'High@L4'),
+    converted: info.file.track.some(x => x._type === 'video' && x.formatProfile !== 'High@L4'),
     filename,
     media: info,
   }
@@ -32,7 +32,7 @@ export async function GetFileEncodeInfo(filename: string): Promise<ConverterInfo
 export function GetMediaInfo(source: string): Promise<MediaInfo> {
   return new Promise<MediaInfo>((resolve, reject) => {
     try {
-      json_mediainfo(source, (error: Error, info: any) => {
+      mediainfo(source, (error: Error, info: any) => {
         if (error) {
           Logger.error(`[ERROR-MEDIAINFO] ${source}`, error, info)
           reject(error)

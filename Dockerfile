@@ -1,10 +1,11 @@
 # STAGE: Base Image
 #------------------------------------------------------------------------------
-FROM xataz/alpine:edge AS BASE
+FROM node:8-jessie-slim AS BASE
 LABEL MAINTAINER=opensource@nativecode.com
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -ex \
-  && apk add --no-cache handbrake mediainfo nodejs nodejs-npm \
+  && apt-get update \
+  && apt-get install -y handbrake-cli mediainfo \
   ;
 
 # STAGE: Build
@@ -43,4 +44,4 @@ RUN set -ex \
   ;
 VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/bin/node", "plexify.js"]
+CMD ["/usr/local/bin/node", "plexify.js"]

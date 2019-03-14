@@ -1,9 +1,7 @@
-import { MediaInfoGeneral } from './MediaInfoGeneral'
-import { MediaInfoVideo } from './MediaInfoVideo'
-import { MediaInfoAudio } from './MediaInfoAudio'
+import { MediaInfoFile } from './MediaInfoFile'
 
 export interface MediaInfo {
-  general: MediaInfoGeneral
-  video: MediaInfoVideo[]
-  audio: MediaInfoAudio[]
+  _version: string
+  _ref: string
+  file: MediaInfoFile
 }
