@@ -34,7 +34,7 @@ export function GetMediaInfo(source: string): Promise<MediaInfo> {
     try {
       mediainfo(source, (error: Error, info: any) => {
         if (error) {
-          Logger.error(`[ERROR-MEDIAINFO] ${source}`, error, info)
+          Logger.error('[ERROR-MEDIAINFO]', source, error, info)
           reject(error)
         } else {
           resolve(info as MediaInfo)
