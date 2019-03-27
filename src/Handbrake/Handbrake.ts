@@ -30,9 +30,14 @@ export class Handbrake {
       success: false,
     }
 
+    const options: HandbrakeOptions = {
+      ...this.options,
+      ...{ input: source, output: target },
+    }
+
     return new Promise((resolve, reject) => {
       let errored = false
-      spawn(this.options)
+      spawn(options)
         .on(HandbrakeEvent.Cancelled, () => {
           Logger.info(`Encoding ${source} cancelled`)
           results.success = false
