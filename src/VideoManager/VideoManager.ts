@@ -5,20 +5,24 @@ import { VideoInfo } from './VideoInfo'
 import { MediaInfo } from '../MediaInfo/MediaInfo'
 import { VideoManagerOptions } from './VideoManagerOptions'
 import { Handbrake, EncodeResults } from '../Handbrake/Handbrake'
+import { DataStore } from '../DataStore/DataStore'
 
-const DefaultOptions: Partial<VideoManagerOptions> = {
+const DefaultOptions: VideoManagerOptions = {
   extensions: ['avi', 'mp4', 'mpg', 'mpeg', 'wmv'],
+  paths: [],
 }
 
 export class VideoManager {
+  private readonly datastore: DataStore
   private readonly handbrake: Handbrake
   private readonly mediainfo: MediaInfo
   private readonly options: VideoManagerOptions
 
   constructor(private readonly videoManagerOptions: Partial<VideoManagerOptions>) {
+    this.datastore = new DataStore()
     this.handbrake = new Handbrake()
     this.mediainfo = new MediaInfo()
-    this.options = { ...DefaultOptions, ...videoManagerOptions } as VideoManagerOptions
+    this.options = { ...DefaultOptions, ...videoManagerOptions }
   }
 
   async encode(files: string[]): Promise<EncodeResults[]> {
