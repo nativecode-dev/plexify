@@ -3,7 +3,7 @@ import { exec, ExecOptions } from 'child_process'
 import { Logger } from '../Logging'
 import { MediaInfoOptions } from './MediaInfoOptions'
 
-const DefaultOptions: MediaInfoOptions = {
+export const DefaultMediaInfoOptions: MediaInfoOptions = {
   bom: true,
   exe: '/usr/bin/mediainfo',
   full: false,
@@ -14,7 +14,7 @@ export class MediaInfo {
   private readonly options: MediaInfoOptions
 
   constructor(private readonly mediaInfoOptions?: MediaInfoOptions) {
-    this.options = { ...DefaultOptions, ...mediaInfoOptions }
+    this.options = { ...DefaultMediaInfoOptions, ...mediaInfoOptions }
   }
 
   async videoProfileFormat(filename: string): Promise<string> {

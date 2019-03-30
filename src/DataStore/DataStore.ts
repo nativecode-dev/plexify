@@ -2,7 +2,7 @@ import { createClient, RedisClient } from 'redis'
 
 import { DataStoreOptions } from './DataStoreOptions'
 
-const DefaultOptions: DataStoreOptions = {
+export const DefaultDataStoreOptions: DataStoreOptions = {
   host: 'localhost',
   port: 6379,
 }
@@ -12,7 +12,7 @@ export class DataStore {
   private readonly redis: RedisClient
 
   constructor(private readonly dataStoreOptions?: Partial<DataStoreOptions>) {
-    this.options = { ...DefaultOptions, ...dataStoreOptions }
+    this.options = { ...DefaultDataStoreOptions, ...dataStoreOptions }
     this.redis = createClient({
       host: this.options.host,
       port: this.options.port,

@@ -2,14 +2,18 @@ import { fs } from '@nofrills/fs'
 import { all } from 'promise-parallel-throttle'
 
 import { VideoInfo } from './VideoInfo'
-import { MediaInfo } from '../MediaInfo/MediaInfo'
+import { MediaInfo, DefaultMediaInfoOptions } from '../MediaInfo/MediaInfo'
 import { VideoManagerOptions } from './VideoManagerOptions'
-import { Handbrake, EncodeResults } from '../Handbrake/Handbrake'
-import { DataStore } from '../DataStore/DataStore'
+import { Handbrake, EncodeResults, DefaultHandbrakeOptions } from '../Handbrake/Handbrake'
+import { DataStore, DefaultDataStoreOptions } from '../DataStore/DataStore'
 
 const DefaultOptions: VideoManagerOptions = {
   extensions: ['avi', 'mp4', 'mpg', 'mpeg', 'wmv'],
   paths: [],
+
+  datastore: DefaultDataStoreOptions,
+  handbrake: DefaultHandbrakeOptions,
+  mediainfo: DefaultMediaInfoOptions,
 }
 
 export class VideoManager {
@@ -19,20 +23,26 @@ export class VideoManager {
   private readonly options: VideoManagerOptions
 
   constructor(private readonly videoManagerOptions: Partial<VideoManagerOptions>) {
-    this.datastore = new DataStore()
-    this.handbrake = new Handbrake()
-    this.mediainfo = new MediaInfo()
     this.options = { ...DefaultOptions, ...videoManagerOptions }
+    this.datastore = new DataStore(this.options.datastore)
+    this.handbrake = new Handbrake(this.options.handbrake)
+    this.mediainfo = new MediaInfo(this.options.mediainfo)
   }
 
-  async encode(files: string[]): Promise<EncodeResults[]> {
+  async encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
     return all(
-      files.map(file => async () => {
-        const basepath = fs.dirname(file)
-        const target = fs.join(basepath, `${file}.processing`)
-        const results = await this.handbrake.encode(file, target)
-        return results
-      }),
+      videos
+        .filter(video => video.converted === false)
+        .map(video => async () => {
+          const basepath = fs.dirname(video.source)
+          const target = fs.join(basepath, `${video.source}.processing`)
+          const results = await this.handbrake.encode(video.source, target)
+          if (await this.datastore.exists(video.source)) {
+            video.converted = results.success
+            await this.datastore.setJson(video.source, video)
+          }
+          return results
+        }),
     )
   }
 
@@ -42,8 +52,6 @@ export class VideoManager {
       return [...results, ...mapped]
     }, [])
 
-    console.log('patterns', ...patterns)
-
     return fs.globs(patterns)
   }
 
@@ -51,10 +59,17 @@ export class VideoManager {
     return all(
       files.map(file => async () => {
         const format = await this.mediainfo.videoProfileFormat(file)
-        return {
+        const video: VideoInfo = {
+          converted: false,
           source: file,
           videoFormat: format,
         }
+
+        if (await this.datastore.exists(video.source)) {
+          return this.datastore.getJson<VideoInfo>(video.source)
+        }
+
+        return video
       }),
     )
   }

@@ -8,10 +8,13 @@ export interface EncodeResults {
   success: boolean
 }
 
-const DefaultOptions: Partial<HandbrakeOptions> = {
+export const DefaultHandbrakeOptions: HandbrakeOptions = {
   'all-audio': true,
   'audio-lang-list': 'und',
   optimize: true,
+  input: '',
+  output: '',
+  rotate: 0,
   preset: 'Fast 1080p30',
   subtitle: 'scan',
 }
@@ -20,7 +23,7 @@ export class Handbrake {
   private readonly options: HandbrakeOptions
 
   constructor(handbrakeOptions?: Partial<HandbrakeOptions>) {
-    this.options = { ...DefaultOptions, ...handbrakeOptions } as HandbrakeOptions
+    this.options = { ...DefaultHandbrakeOptions, ...handbrakeOptions } as HandbrakeOptions
   }
 
   encode(source: string, target: string): Promise<EncodeResults> {
@@ -37,6 +40,7 @@ export class Handbrake {
 
     return new Promise((resolve, reject) => {
       let errored = false
+      Logger.debug(options)
       spawn(options)
         .on(HandbrakeEvent.Cancelled, () => {
           Logger.info(`Encoding ${source} cancelled`)
