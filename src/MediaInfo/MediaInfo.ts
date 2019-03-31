@@ -11,6 +11,7 @@ export const DefaultMediaInfoOptions: MediaInfoOptions = {
 }
 
 export class MediaInfo {
+  private readonly log = Logger.extend('medainfo')
   private readonly options: MediaInfoOptions
 
   constructor(private readonly mediaInfoOptions?: MediaInfoOptions) {
@@ -28,7 +29,7 @@ export class MediaInfo {
       this.configureOptions(args, argopts)
 
       const command = [this.options.exe, ...argopts, filename].join(' ')
-      Logger.debug(command)
+      this.log.debug(command)
 
       const options: ExecOptions = {
         maxBuffer: this.options.maxBufferSize,

@@ -1,6 +1,13 @@
 declare module 'handbrake-js' {
   import { EventEmitter } from 'events'
 
+  export enum HandbrakeRotation {
+    None = 0,
+    '90degrees' = 90,
+    '180degrees' = 180,
+    '270degrees' = 270,
+  }
+
   export interface HandbrakeOptions {
     'all-audio'?: boolean
     'audio-lang-list'?: string
@@ -8,7 +15,7 @@ declare module 'handbrake-js' {
     optimize?: boolean
     output: string
     preset: string
-    rotate?: number
+    rotate?: HandbrakeRotation
     subtitle?: string
   }
 

@@ -1,5 +1,6 @@
 import { createClient, RedisClient } from 'redis'
 
+import { Logger } from '../Logging'
 import { DataStoreOptions } from './DataStoreOptions'
 
 export const DefaultDataStoreOptions: DataStoreOptions = {
@@ -8,6 +9,7 @@ export const DefaultDataStoreOptions: DataStoreOptions = {
 }
 
 export class DataStore {
+  private readonly log = Logger.extend('datastore')
   private readonly options: DataStoreOptions
   private readonly redis: RedisClient
 
@@ -19,6 +21,7 @@ export class DataStore {
     })
 
     this.redis.on('error', () => console.log)
+    process.on('exit', () => this.redis.end(true))
   }
 
   exists(key: string): Promise<boolean> {

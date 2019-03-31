@@ -5,6 +5,7 @@ import { DataStoreOptions } from '../DataStore/DataStoreOptions'
 export interface VideoManagerOptions {
   extensions: string[]
   paths: string[]
+  rename: boolean
 
   datastore: DataStoreOptions
   handbrake: HandbrakeOptions

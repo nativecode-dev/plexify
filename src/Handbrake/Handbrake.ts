@@ -1,6 +1,7 @@
 import { spawn, HandbrakeOptions } from 'handbrake-js'
-import { HandbrakeEvent } from './HandbrakeEvent'
+
 import { Logger } from '../Logging'
+import { HandbrakeEvent } from './HandbrakeEvent'
 
 export interface EncodeResults {
   filename: string
@@ -14,12 +15,12 @@ export const DefaultHandbrakeOptions: HandbrakeOptions = {
   optimize: true,
   input: '',
   output: '',
-  rotate: 0,
   preset: 'Fast 1080p30',
   subtitle: 'scan',
 }
 
 export class Handbrake {
+  private readonly log = Logger.extend('handbrake')
   private readonly options: HandbrakeOptions
 
   constructor(handbrakeOptions?: Partial<HandbrakeOptions>) {
@@ -40,21 +41,21 @@ export class Handbrake {
 
     return new Promise((resolve, reject) => {
       let errored = false
-      Logger.debug(options)
+      this.log.debug(options)
       spawn(options)
         .on(HandbrakeEvent.Cancelled, () => {
-          Logger.info(`Encoding ${source} cancelled`)
+          this.log.info(`Encoding ${source} cancelled`)
           results.success = false
           errored = true
           reject(results)
         })
         .on(HandbrakeEvent.Complete, () => {
-          Logger.info(`Encoding ${source} completed`)
+          this.log.info(`Encoding ${source} completed`)
           results.success = errored
           resolve(results)
         })
         .on(HandbrakeEvent.Error, (error: Error) => {
-          Logger.info(`Encoding ${source} errored: ${error}`)
+          this.log.info(`Encoding ${source} errored: ${error}`)
           results.success = false
           errored = true
           reject(error)

@@ -2,7 +2,7 @@
   "author": "opensource@nativecode.com",
   "description": "Plexify's video files",
   "keywords": [],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "main": "dist/plexify",
   "name": "plexify",
   "typings": "dist/plexify",
@@ -10,12 +10,15 @@
   "dependencies": {
     "@nofrills/fs": "^3.6.0",
     "@nofrills/lincoln-debug": "^3.6.6",
+    "@nofrills/types": "^3.5.0",
     "handbrake-js": "^3.0.8",
+    "minimist": "^1.2.0",
     "node-schedule": "^1.3.2",
     "promise-parallel-throttle": "^3.3.0",
     "redis": "^2.8.0"
   },
   "devDependencies": {
+    "@types/minimist": "^1.2.0",
     "@types/node": "^11.10.5",
     "@types/node-schedule": "^1.2.3",
     "@types/redis": "^2.8.10",
@@ -42,6 +45,7 @@
   },
   "scripts": {
     "build": "rimraf dist && webpack-cli",
+    "encode": "cross-env DEBUG=plexify:* ts-node src/plexify",
     "prebuild": "tslint --project tsconfig.json --config tslint.json",
     "test": "docker run --rm --name plexify-debug -e PLEXIFY_DRYRUN=false --mount type=bind,src=/mnt/media,dst=/mnt/media nativecode/plexify:latest",
     "pretest": "npm run docker-build",
