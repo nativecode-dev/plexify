@@ -19,7 +19,7 @@ export const DefaultVideoManagerOptions: VideoManagerOptions = {
 }
 
 const ValidVideoFormats: string[] = ['AVC', 'HEVC', 'MPEG-4', 'xvid']
-const ValidVideoProfiles: string[] = ['@L5', 'High@']
+const ValidVideoProfiles: string[] = ['@L4', '@L5', 'High@']
 
 export class VideoManager {
   private readonly datastore: DataStore
@@ -36,9 +36,7 @@ export class VideoManager {
   }
 
   encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
-    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)), {
-      maxInProgress: 3,
-    })
+    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)))
   }
 
   find(): Promise<string[]> {

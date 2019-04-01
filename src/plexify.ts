@@ -91,7 +91,7 @@ async function main() {
   const scans = await manager.scan(files)
 
   if (argSwitch('--dry-run', false)) {
-    await manager.encode(scans)
+    // await manager.encode(scans)
   }
 
   process.exit()
