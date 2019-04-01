@@ -18,6 +18,9 @@ export const DefaultVideoManagerOptions: VideoManagerOptions = {
   mediainfo: DefaultMediaInfoOptions,
 }
 
+const ValidVideoFormats: string[] = ['AVC', 'HEVC', 'MPEG-4', 'xvid']
+const ValidVideoProfiles: string[] = ['@L5', 'High@']
+
 export class VideoManager {
   private readonly datastore: DataStore
   private readonly handbrake: Handbrake
@@ -33,7 +36,7 @@ export class VideoManager {
   }
 
   encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
-    return all(videos.filter(video => video.converted === false).map(video => () => this.reEncodeVideo(video)), {
+    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)), {
       maxInProgress: 3,
     })
   }
@@ -54,14 +57,18 @@ export class VideoManager {
         const format = await this.mediainfo.videoFormat(file)
         const profile = await this.mediainfo.videoProfileFormat(file)
         const video: VideoInfo = {
-          converted: format.startsWith('High@') || format.startsWith('Main@'),
+          converted: this.requiresConversion(format, profile),
           source: file,
           videoFormat: format,
           videoProfileFormat: profile,
         }
 
         if (await this.datastore.exists(video.source)) {
-          return this.datastore.getJson<VideoInfo>(video.source)
+          const videoData = await this.datastore.getJson<VideoInfo>(video.source)
+
+          if (videoData.converted) {
+            return videoData
+          }
         }
 
         this.log.info(video.source, video)
@@ -71,7 +78,7 @@ export class VideoManager {
     )
   }
 
-  private async reEncodeVideo(video: VideoInfo): Promise<EncodeResults> {
+  private async convertVideo(video: VideoInfo): Promise<EncodeResults> {
     const target = `${video.source}.processing`
 
     if (await fs.exists(target)) {
@@ -83,7 +90,10 @@ export class VideoManager {
     try {
       if (results.success) {
         video.converted = results.success
-        await this.datastore.setJson(video.source, video)
+
+        if ((await this.datastore.setJson(video.source, video)) === false) {
+          throw new Error(`Failed to set redis key: ${video.source}`)
+        }
 
         if (this.options.rename) {
           const temp = `${target}.tmp`
@@ -105,5 +115,12 @@ export class VideoManager {
     } finally {
       return results
     }
+  }
+
+  private requiresConversion(format: string, profile: string): boolean {
+    const formatIncluded = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
+    const profileIncluded = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
+    this.log.debug('requiresConversion', '[format]', formatIncluded, '[profile]', profileIncluded)
+    return formatIncluded && profileIncluded
   }
 }

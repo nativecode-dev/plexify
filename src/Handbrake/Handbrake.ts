@@ -15,7 +15,8 @@ export const DefaultHandbrakeOptions: HandbrakeOptions = {
   optimize: true,
   input: '',
   output: '',
-  preset: 'Fast 1080p30',
+  //  preset: 'Fast 1080p30',
+  preset: 'Normal',
   subtitle: 'scan',
 }
 
