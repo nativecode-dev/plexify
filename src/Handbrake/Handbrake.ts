@@ -52,7 +52,7 @@ export class Handbrake {
         })
         .on(HandbrakeEvent.Complete, () => {
           this.log.info(`Encoding ${source} completed`)
-          results.success = errored
+          results.success = errored === false
           resolve(results)
         })
         .on(HandbrakeEvent.Error, (error: Error) => {

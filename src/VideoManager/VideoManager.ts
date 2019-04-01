@@ -71,7 +71,7 @@ export class VideoManager {
           }
         }
 
-        this.log.info(video.source, video)
+        this.log.info(video.source, video.converted, video.videoFormat, video.videoProfileFormat)
 
         return video
       }),
@@ -86,6 +86,8 @@ export class VideoManager {
     }
 
     const results = await this.handbrake.encode(video.source, target)
+
+    this.log.debug(results.filename, results.success)
 
     try {
       if (results.success) {
@@ -106,8 +108,6 @@ export class VideoManager {
             throw Error(`Failed to rename ${temp} to ${video.source}`)
           }
         }
-
-        this.log.info(video.source, video)
       }
     } catch (error) {
       results.success = false

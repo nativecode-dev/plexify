@@ -1,6 +1,7 @@
 import parseArgs from 'minimist'
 import { Is } from '@nofrills/types'
 
+import { Logger } from './Logging'
 import { DefaultHandbrakeOptions } from './Handbrake/Handbrake'
 import { DefaultDataStoreOptions } from './DataStore/DataStore'
 import { VideoManagerOptions } from './VideoManager/VideoManagerOptions'
@@ -85,19 +86,13 @@ async function main() {
     throw Error('--path required')
   }
 
-  console.log(options)
-
   const manager = new VideoManager(options)
   const files = await manager.find()
   const scans = await manager.scan(files)
-  const encoded = await manager.encode(scans)
 
-  encoded.forEach(encode =>
-    console.log({
-      filename: encode.filename,
-      success: encode.success,
-    }),
-  )
+  if (argSwitch('--dry-run', false)) {
+    await manager.encode(scans)
+  }
 
   process.exit()
 }

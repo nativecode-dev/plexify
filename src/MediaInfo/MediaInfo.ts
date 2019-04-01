@@ -33,7 +33,7 @@ export class MediaInfo {
       const argopts = [...args]
       this.configureOptions(args, argopts)
 
-      const command = [this.options.exe, ...argopts, filename].join(' ')
+      const command = [this.options.exe, ...argopts, `"${filename}"`].join(' ')
       this.log.debug(command)
 
       const options: ExecOptions = {
@@ -60,9 +60,9 @@ export class MediaInfo {
     const pushOutput = args.every(opt => opt.toUpperCase().startsWith('--OUTPUT=') === false)
     const hasVersion = args.some(opt => opt === '--Version')
 
-    if (this.options.bom && pushBOM && hasVersion === false) {
-      opts.push('--BOM')
-    }
+    // if (this.options.bom && pushBOM && hasVersion === false) {
+    //   opts.push('--BOM')
+    // }
 
     if (this.options.full && pushFull && hasVersion === false) {
       opts.push('--Full')
