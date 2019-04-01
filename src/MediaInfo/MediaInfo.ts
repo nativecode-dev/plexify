@@ -18,6 +18,11 @@ export class MediaInfo {
     this.options = { ...DefaultMediaInfoOptions, ...mediaInfoOptions }
   }
 
+  async videoFormat(filename: string): Promise<string> {
+    const output = await this.exec(filename, '--Inform="Video;%Format%"')
+    return output.join('')
+  }
+
   async videoProfileFormat(filename: string): Promise<string> {
     const output = await this.exec(filename, '--Inform="Video;%Format_Profile%"')
     return output.join('')

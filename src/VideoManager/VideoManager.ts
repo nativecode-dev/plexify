@@ -11,7 +11,7 @@ import { Handbrake, EncodeResults, DefaultHandbrakeOptions } from '../Handbrake/
 export const DefaultVideoManagerOptions: VideoManagerOptions = {
   extensions: ['avi', 'mp4', 'mpg', 'mpeg', 'wmv'],
   paths: [],
-  rename: true,
+  rename: false,
 
   datastore: DefaultDataStoreOptions,
   handbrake: DefaultHandbrakeOptions,
@@ -33,7 +33,9 @@ export class VideoManager {
   }
 
   encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
-    return all(videos.filter(video => video.converted === false).map(video => () => this.reEncodeVideo(video)))
+    return all(videos.filter(video => video.converted === false).map(video => () => this.reEncodeVideo(video)), {
+      maxInProgress: 3,
+    })
   }
 
   find(): Promise<string[]> {
@@ -49,11 +51,13 @@ export class VideoManager {
   scan(files: string[]): Promise<VideoInfo[]> {
     return all(
       files.map(file => async () => {
-        const format = await this.mediainfo.videoProfileFormat(file)
+        const format = await this.mediainfo.videoFormat(file)
+        const profile = await this.mediainfo.videoProfileFormat(file)
         const video: VideoInfo = {
           converted: format.startsWith('High@') || format.startsWith('Main@'),
           source: file,
           videoFormat: format,
+          videoProfileFormat: profile,
         }
 
         if (await this.datastore.exists(video.source)) {
@@ -77,28 +81,28 @@ export class VideoManager {
     const results = await this.handbrake.encode(video.source, target)
 
     try {
-      if (await this.datastore.exists(video.source)) {
+      if (results.success) {
         video.converted = results.success
         await this.datastore.setJson(video.source, video)
-      }
 
-      if (this.options.rename) {
-        const temp = `${target}.tmp`
+        if (this.options.rename) {
+          const temp = `${target}.tmp`
 
-        if ((await fs.rename(target, temp)) === false) {
-          throw Error(`Failed to rename ${target} to ${temp}`)
+          if ((await fs.rename(target, temp)) === false) {
+            throw Error(`Failed to rename ${target} to ${temp}`)
+          }
+
+          if ((await fs.rename(temp, video.source)) === false) {
+            throw Error(`Failed to rename ${temp} to ${video.source}`)
+          }
         }
 
-        if ((await fs.rename(temp, video.source)) === false) {
-          throw Error(`Failed to rename ${temp} to ${video.source}`)
-        }
+        this.log.info(video.source, video)
       }
-
-      this.log.info(video.source, video)
-
-      return results
-    } finally {
+    } catch (error) {
       results.success = false
+      this.log.error(error)
+    } finally {
       return results
     }
   }

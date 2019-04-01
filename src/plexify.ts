@@ -73,7 +73,7 @@ async function main() {
     ...{
       extensions: argArray(args.extension, DefaultVideoManagerOptions.extensions),
       paths: argArray(args.path),
-      rename: argSwitch(args.rename, true),
+      rename: argSwitch(args.rename, false),
       datastore: {
         host: argString(args.host, DefaultDataStoreOptions.host) as string,
         port: argNumber(args.port, DefaultDataStoreOptions.port) as number,
@@ -90,7 +90,14 @@ async function main() {
   const manager = new VideoManager(options)
   const files = await manager.find()
   const scans = await manager.scan(files)
-  await manager.encode(scans)
+  const encoded = await manager.encode(scans)
+
+  encoded.forEach(encode =>
+    console.log({
+      filename: encode.filename,
+      success: encode.success,
+    }),
+  )
 
   process.exit()
 }

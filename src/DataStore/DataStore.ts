@@ -28,10 +28,13 @@ export class DataStore {
     return new Promise((resolve, reject) => {
       this.redis.exists(key, (error, count) => {
         if (error) {
+          this.log.error(error)
           reject(error)
         } else if (count > 0) {
+          this.log.debug(key, count)
           resolve(true)
         } else {
+          this.log.debug(key, count)
           resolve(false)
         }
       })
@@ -42,8 +45,10 @@ export class DataStore {
     return new Promise((resolve, reject) => {
       this.redis.keys(pattern, (error, values) => {
         if (error) {
+          this.log.error(error)
           reject(error)
         } else {
+          this.log.debug('keys', ...values)
           resolve(values)
         }
       })
@@ -54,9 +59,12 @@ export class DataStore {
     return new Promise((resolve, reject) => {
       this.redis.get(key, (error, value) => {
         if (error) {
+          this.log.error(error)
           reject(error)
         } else {
-          resolve(JSON.parse(value))
+          const json = JSON.parse(value)
+          this.log.debug(key, json)
+          resolve(json)
         }
       })
     })
@@ -67,10 +75,13 @@ export class DataStore {
       const value = JSON.stringify(instance)
       this.redis.set(key, value, (error, ok) => {
         if (error) {
+          this.log.error(error)
           reject(error)
         } else if (ok === 'OK') {
+          this.log.debug(key, ok)
           resolve(true)
         } else {
+          this.log.debug(key, ok)
           resolve(false)
         }
       })
