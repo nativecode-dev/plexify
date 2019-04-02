@@ -7,6 +7,14 @@ RUN set -ex \
   && apt-get update \
   && apt-get install -y handbrake-cli mediainfo \
   ;
+# FROM jlesage/handbrake:v1.16.0  AS BASE
+# LABEL MAINTAINER=opensource@nativecode.com
+# ENV DEBIAN_FRONTEND=noninteractive
+# RUN set -ex \
+# #  && sed -i -e 's/v[[:digit:]]\.[[:digit:]]/edge/g' /etc/apk/repositories \
+# #  && apk upgrade --update-cache \
+#   && apk add mediainfo nodejs nodejs-npm \
+#   ;
 
 # STAGE: Build
 #------------------------------------------------------------------------------
