@@ -62,7 +62,7 @@ export class VideoManager {
         }
 
         if (await this.datastore.exists(video.source)) {
-          const videoData = await this.datastore.getJson<VideoInfo>(video.source)
+          const videoData = await this.datastore.getJson<VideoInfo>(fs.basename(video.source))
 
           if (videoData.converted) {
             return videoData
@@ -91,7 +91,7 @@ export class VideoManager {
       if (results.success) {
         video.converted = results.success
 
-        if ((await this.datastore.setJson(video.source, video)) === false) {
+        if ((await this.datastore.setJson(fs.basename(video.source), video)) === false) {
           throw new Error(`Failed to set redis key: ${video.source}`)
         }
 
@@ -118,7 +118,8 @@ export class VideoManager {
   private requiresConversion(format: string, profile: string): boolean {
     const formatIncluded = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
     const profileIncluded = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
-    this.log.debug('requiresConversion', '[format]', formatIncluded, '[profile]', profileIncluded)
-    return formatIncluded && profileIncluded
+    const requireConversion = formatIncluded && profileIncluded
+    this.log.debug(`requiresConversion=${requireConversion}`, `[format:${format}]`, formatIncluded, `[profile:${profile}]`, profileIncluded)
+    return requireConversion
   }
 }

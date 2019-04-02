@@ -43,7 +43,8 @@ export class MediaInfo {
 
       exec(command, options, (error, stdout) => {
         if (error) {
-          reject(error)
+          this.log.error(error)
+          resolve([])
         } else {
           resolve(this.split(stdout))
         }

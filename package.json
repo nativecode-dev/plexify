@@ -45,7 +45,7 @@
   },
   "scripts": {
     "build": "rimraf dist && webpack-cli",
-    "encode": "cross-env DEBUG=plexify:*:info ts-node src/plexify",
+    "encode": "cross-env DEBUG=plexify:* ts-node src/plexify",
     "prebuild": "tslint --project tsconfig.json --config tslint.json",
     "test": "docker run --rm --name plexify-debug -e PLEXIFY_DRYRUN=false --mount type=bind,src=/mnt/media,dst=/mnt/media nativecode/plexify:latest",
     "pretest": "npm run docker-build",
