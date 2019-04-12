@@ -36,9 +36,9 @@ RUN set -ex \
 #------------------------------------------------------------------------------
 FROM BASE
 ENV DEBUG=plexify*
-ENV PLEXIFY_DELETE="false"
+ENV PLEXIFY_RENAME="false"
 ENV PLEXIFY_DRYRUN="true"
-ENV PLEXIFY_MOUNT_POINT="/mnt/media"
+ENV PLEXIFY_MOUNT="/mnt/media"
 ENV PLEXIFY_REDIS_HOST="redis"
 ENV PLEXIFY_REDIS_PORT="6379"
 COPY --from=BUILD /build/dist /app

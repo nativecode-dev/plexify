@@ -1,96 +1,52 @@
-import parseArgs from 'minimist'
-import { Is } from '@nofrills/types'
+import program from 'commander'
+import { fs } from '@nofrills/fs'
 
 import { Logger } from './Logging'
+import { DefaultMediaInfoOptions } from './MediaInfo/MediaInfo'
 import { DefaultHandbrakeOptions } from './Handbrake/Handbrake'
-import { DefaultDataStoreOptions } from './DataStore/DataStore'
 import { VideoManagerOptions } from './VideoManager/VideoManagerOptions'
-import { DefaultVideoManagerOptions, VideoManager } from './VideoManager/VideoManager'
+import { VideoManager, DefaultVideoManagerOptions } from './VideoManager/VideoManager'
 
-function argArray(arg?: string | string[], defaults?: string[]): undefined | string[] {
-  if (Is.array(arg)) {
-    return arg as string[]
-  }
-
-  if (arg) {
-    return [arg as string]
-  }
-
-  if (defaults) {
-    return defaults
-  }
-
-  return undefined
-}
-
-function argNumber(arg?: string, defaultValue?: number): number | undefined {
-  if (arg) {
-    return parseInt(arg, undefined)
-  }
-
-  if (defaultValue) {
-    return defaultValue
-  }
-
-  return undefined
-}
-
-function argString(arg?: string, defaultValue?: string): string | undefined {
-  if (arg) {
-    return arg
-  }
-
-  if (defaultValue) {
-    return defaultValue
-  }
-
-  return undefined
-}
-
-function argSwitch(arg?: string, defaultSwitch?: boolean): boolean {
-  if (arg) {
-    return true
-  }
-
-  if (defaultSwitch) {
-    return defaultSwitch
-  }
-
-  return false
+interface Package {
+  version: string
 }
 
 async function main() {
-  const args = parseArgs(process.argv)
-  const options: Partial<VideoManagerOptions> = {
+  const npm = await fs.json<Package>('package.json')
+
+  const args = program
+    .version(npm.version)
+    .option('--path', 'location of media files', '/mnt/media')
+    .option('--rename', 'rename after conversion', process.env.PLEXIFY_RENAME || false)
+    .option('--dry-run', 'performs dry run', process.env.PLEXIFY_DRYRUN || true)
+    .option('--db-host', 'redis database host', process.env.PLEXIFY_REDIS_HOST || 'localhost')
+    .option('--db-port', 'redis database port', process.env.PLEXIFY_REDIS_PORT || '6379')
+    .parse(process.argv)
+
+  Logger.debug(args)
+
+  const options: VideoManagerOptions = {
+    ...DefaultVideoManagerOptions,
     ...{
-      ...DefaultVideoManagerOptions,
       datastore: {
-        ...DefaultDataStoreOptions,
+        host: args.dbHost,
+        port: parseInt(args.dbPort, 0),
       },
-      handbrake: {
-        ...DefaultHandbrakeOptions,
-      },
-    },
-    ...{
-      extensions: argArray(args.extension, DefaultVideoManagerOptions.extensions),
-      paths: argArray(args.path),
-      rename: argSwitch(args.rename, false),
-      datastore: {
-        host: argString(args.host, DefaultDataStoreOptions.host) as string,
-        port: argNumber(args.port, DefaultDataStoreOptions.port) as number,
-      },
+      paths: [args.path],
+      rename: args.rename,
+      handbrake: { ...DefaultHandbrakeOptions },
+      mediainfo: { ...DefaultMediaInfoOptions },
     },
   }
 
-  if (!options.paths || options.paths.length === 0) {
-    throw Error('--path required')
-  }
+  Logger.debug(options)
 
   const manager = new VideoManager(options)
   const files = await manager.find()
   const scans = await manager.scan(files)
 
-  if (argSwitch('--dry-run', false)) {
+  if (program.dryRun === false) {
+    Logger.info('encoding')
     await manager.encode(scans)
   }
 
