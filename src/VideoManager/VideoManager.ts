@@ -1,3 +1,4 @@
+import { cpus } from 'os'
 import { fs } from '@nofrills/fs'
 import { all } from 'promise-parallel-throttle'
 
@@ -36,7 +37,9 @@ export class VideoManager {
   }
 
   encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
-    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)))
+    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)), {
+      maxInProgress: cpus().length,
+    })
   }
 
   find(): Promise<string[]> {
@@ -73,6 +76,9 @@ export class VideoManager {
 
         return video
       }),
+      {
+        maxInProgress: cpus().length,
+      },
     )
   }
 
@@ -119,7 +125,13 @@ export class VideoManager {
     const formatIncluded = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
     const profileIncluded = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
     const requireConversion = formatIncluded && profileIncluded
-    this.log.debug(`requiresConversion=${requireConversion}`, `[format:${format}]`, formatIncluded, `[profile:${profile}]`, profileIncluded)
+    this.log.debug(
+      `requiresConversion=${requireConversion}`,
+      `[format:${format}]`,
+      formatIncluded,
+      `[profile:${profile}]`,
+      profileIncluded,
+    )
     return requireConversion
   }
 }
