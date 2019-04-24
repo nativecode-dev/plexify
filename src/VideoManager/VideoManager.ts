@@ -4,6 +4,7 @@ import { all } from 'promise-parallel-throttle'
 
 import { Logger } from '../Logging'
 import { VideoInfo } from './VideoInfo'
+import { VideoQueue } from './VideoQueue'
 import { VideoManagerOptions } from './VideoManagerOptions'
 import { DataStore, DefaultDataStoreOptions } from '../DataStore/DataStore'
 import { MediaInfo, DefaultMediaInfoOptions } from '../MediaInfo/MediaInfo'
@@ -37,7 +38,7 @@ export class VideoManager {
   }
 
   encode(videos: VideoInfo[]): Promise<EncodeResults[]> {
-    return all(videos.filter(video => video.converted === false).map(video => () => this.convertVideo(video)), {
+    return all(videos.map(video => () => this.convertVideo(video)), {
       maxInProgress: cpus().length,
     })
   }
@@ -52,29 +53,23 @@ export class VideoManager {
     return fs.globs(patterns)
   }
 
-  scan(files: string[]): Promise<VideoInfo[]> {
+  scan(files: string[]): Promise<VideoQueue[]> {
     return all(
       files.map(file => async () => {
         const format = await this.mediainfo.videoFormat(file)
         const profile = await this.mediainfo.videoProfileFormat(file)
-        const video: VideoInfo = {
-          converted: this.requiresConversion(format, profile),
-          source: file,
-          videoFormat: format,
-          videoProfileFormat: profile,
+        const queued: VideoQueue = {
+          queued: this.requiresConversion(file, format, profile),
+          video: {
+            source: file,
+            videoFormat: format,
+            videoProfileFormat: profile,
+          },
         }
 
-        if (await this.datastore.exists(video.source)) {
-          const videoData = await this.datastore.getJson<VideoInfo>(fs.basename(video.source))
+        this.log.info(queued)
 
-          if (videoData.converted) {
-            return videoData
-          }
-        }
-
-        this.log.info(video.source, video.converted, video.videoFormat, video.videoProfileFormat)
-
-        return video
+        return queued
       }),
       {
         maxInProgress: cpus().length,
@@ -95,8 +90,6 @@ export class VideoManager {
 
     try {
       if (results.success) {
-        video.converted = results.success
-
         if ((await this.datastore.setJson(fs.basename(video.source), video)) === false) {
           throw new Error(`Failed to set redis key: ${video.source}`)
         }
@@ -121,17 +114,11 @@ export class VideoManager {
     }
   }
 
-  private requiresConversion(format: string, profile: string): boolean {
-    const formatIncluded = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
-    const profileIncluded = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
-    const requireConversion = formatIncluded && profileIncluded
-    this.log.debug(
-      `requiresConversion=${requireConversion}`,
-      `[format:${format}]`,
-      formatIncluded,
-      `[profile:${profile}]`,
-      profileIncluded,
-    )
-    return requireConversion
+  private requiresConversion(file: string, format: string, profile: string): boolean {
+    const formatValid = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
+    const profileValid = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
+    const requiresConversion = (formatValid && profileValid) === false
+    this.log.debug(`${file}: ${requiresConversion}, format: ${format}, profile: ${profile}`)
+    return requiresConversion
   }
 }

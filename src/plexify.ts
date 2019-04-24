@@ -32,7 +32,7 @@ async function main() {
 
     if (dryRun === false) {
       Logger.info('encoding')
-      await manager.encode(scans)
+      await manager.encode(scans.map(scan => scan.video))
     }
 
     await sleep(5 * (1000 * 60))
