@@ -10,12 +10,9 @@ export interface EncodeResults {
 }
 
 export const DefaultHandbrakeOptions: HandbrakeOptions = {
-  'all-audio': true,
-  'audio-lang-list': 'und',
   optimize: true,
   input: '',
   output: '',
-  //  preset: 'Fast 1080p30',
   preset: 'Normal',
   subtitle: 'scan',
 }

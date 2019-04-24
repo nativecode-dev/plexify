@@ -31,10 +31,11 @@ async function main() {
     const scans = await manager.scan(files)
 
     if (dryRun === false) {
-      Logger.info('encoding')
+      Logger.info('encode', scans)
       await manager.encode(scans.map(scan => scan.video))
     }
 
+    Logger.info('sleep')
     await sleep(5 * (1000 * 60))
   }
 }

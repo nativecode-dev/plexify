@@ -43,14 +43,18 @@ export class VideoManager {
     })
   }
 
-  find(): Promise<string[]> {
+  async find(): Promise<string[]> {
     const patterns = this.options.paths.reduce((results, path) => {
       const mapped = this.options.extensions.map(extension => fs.join(path, `**/*.${extension}`))
       return [...results, ...mapped]
     }, [])
 
-    this.log.debug('patterns', ...patterns)
-    return fs.globs(patterns)
+    this.log.debug('patterns: ', patterns)
+    const globs = await fs.globs(patterns)
+
+    this.log.debug('found: ', globs.length)
+
+    return globs
   }
 
   scan(files: string[]): Promise<VideoQueue[]> {
@@ -84,26 +88,22 @@ export class VideoManager {
       await fs.delete(target)
     }
 
+    this.log.debug('convert: ', video.source)
+
     const results = await this.handbrake.encode(video.source, target)
 
     this.log.debug(results.filename, results.success)
 
     try {
-      if (results.success) {
-        if ((await this.datastore.setJson(fs.basename(video.source), video)) === false) {
-          throw new Error(`Failed to set redis key: ${video.source}`)
+      if (results.success && this.options.rename) {
+        const temp = `${target}.tmp`
+
+        if ((await fs.rename(target, temp)) === false) {
+          throw Error(`Failed to rename ${target} to ${temp}`)
         }
 
-        if (this.options.rename) {
-          const temp = `${target}.tmp`
-
-          if ((await fs.rename(target, temp)) === false) {
-            throw Error(`Failed to rename ${target} to ${temp}`)
-          }
-
-          if ((await fs.rename(temp, video.source)) === false) {
-            throw Error(`Failed to rename ${temp} to ${video.source}`)
-          }
+        if ((await fs.rename(temp, video.source)) === false) {
+          throw Error(`Failed to rename ${temp} to ${video.source}`)
         }
       }
     } catch (error) {
