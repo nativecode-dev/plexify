@@ -31,8 +31,9 @@ async function main() {
     const scans = await manager.scan(files)
 
     if (dryRun === false) {
-      Logger.info('encode', scans)
-      await manager.encode(scans.map(scan => scan.video))
+      const queued = scans.filter(scan => scan.queued)
+      Logger.info('encode', queued)
+      await manager.encode(queued.map(scan => scan.video))
     }
 
     Logger.info('sleep')
