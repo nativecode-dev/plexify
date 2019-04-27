@@ -1,4 +1,4 @@
-import { cpus } from 'os'
+import { cpus, hostname } from 'os'
 import { fs } from '@nofrills/fs'
 import { all } from 'promise-parallel-throttle'
 
@@ -60,6 +60,16 @@ export class VideoManager {
   scan(files: string[]): Promise<VideoQueue[]> {
     return all(
       files.map(file => async () => {
+        const existing = await this.datastore.exists(file)
+
+        if (existing) {
+          const currentQueue = await this.datastore.getJson<VideoQueue>(file)
+
+          if (currentQueue.queued === false) {
+            return currentQueue
+          }
+        }
+
         const format = await this.mediainfo.videoFormat(file)
         const profile = await this.mediainfo.videoProfileFormat(file)
         const queued: VideoQueue = {
@@ -73,6 +83,10 @@ export class VideoManager {
 
         this.log.info(queued)
 
+        if (queued.queued) {
+          await this.datastore.setJson(file, queued)
+        }
+
         return queued
       }),
       {
@@ -82,6 +96,15 @@ export class VideoManager {
   }
 
   private async convertVideo(video: VideoInfo): Promise<EncodeResults> {
+    const lock = `${video.source}.locked`
+    const currentLock = await this.datastore.getJson<string | null>(lock)
+
+    if (currentLock !== hostname() && currentLock !== null) {
+      throw new Error(`Failed to lock ${video.source}. Locked by ${currentLock}`)
+    } else {
+      await this.datastore.setJson(lock, hostname())
+    }
+
     const target = `${video.source}.processing`
 
     if (await fs.exists(target)) {
@@ -110,6 +133,7 @@ export class VideoManager {
       results.success = false
       this.log.error(error)
     } finally {
+      await this.datastore.setJson(lock, null)
       return results
     }
   }
