@@ -81,9 +81,9 @@ export class VideoManager {
           },
         }
 
-        this.log.info(queued)
+        this.log.debug(queued)
 
-        if (queued.queued) {
+        if (queued.queued === false) {
           await this.datastore.setJson(file, queued)
         }
 
