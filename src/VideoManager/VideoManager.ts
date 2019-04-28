@@ -99,7 +99,7 @@ export class VideoManager {
     const lock = `${video.source}.locked`
     const currentLock = await this.datastore.getJson<string | null>(lock)
 
-    if (currentLock !== hostname() && currentLock !== null) {
+    if (currentLock !== hostname()) {
       throw new Error(`Failed to lock ${video.source}. Locked by ${currentLock}`)
     } else {
       await this.datastore.setJson(lock, hostname())
