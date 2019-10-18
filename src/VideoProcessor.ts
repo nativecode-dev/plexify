@@ -1,31 +1,47 @@
 import mediainfo from 'node-mediainfo'
 
+import { fs } from '@nofrills/fs'
+
 import { VideoCollection } from './VideoCollection'
+import { Handbrake } from './Handbrake/Handbrake'
 
 export class VideoProcessor {
-  constructor(private readonly videos: VideoCollection) {}
+  constructor(private readonly videos: VideoCollection, private readonly handbrake: Handbrake) {}
 
-  convertible(filename: string): Promise<boolean> {
+  async convertible(filename: string): Promise<boolean> {
+    const info = await mediainfo(filename)
+    console.log(info)
     return Promise.reject()
   }
 
-  async convert(filename: string, owner: string): Promise<boolean> {
+  async convert(filename: string, owner: string, rename: boolean): Promise<boolean> {
     const locked = await this.videos.lock(filename, owner)
 
     if (locked === false) {
       return Promise.reject(`could not lock ${filename}`)
     }
 
-    // TODO: Perform the conversion.
-    const info = await mediainfo(filename)
-    console.log(info)
+    try {
+      const target = `${filename}.processing`
+      const results = await this.handbrake.encode(filename, target)
 
-    const unlocked = await this.videos.unlock(filename)
+      if (results.success && rename) {
+        const renamed = `${filename}.renamed`
+        // Rename original file to temp file.
+        await fs.rename(filename, renamed)
+        // Rename processing file to original file.
+        await fs.rename(target, filename)
+        // Delete renamed file (original).
+        await fs.delete(renamed)
+      }
+    } finally {
+      const unlocked = await this.videos.unlock(filename)
 
-    if (unlocked === false) {
-      return Promise.reject(`could not unlock ${filename}`)
+      if (unlocked === false) {
+        return Promise.reject(`could not unlock ${filename}`)
+      }
+
+      return Promise.resolve(locked && unlocked)
     }
-
-    return Promise.resolve(locked && unlocked)
   }
 }

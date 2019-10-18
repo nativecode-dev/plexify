@@ -26,13 +26,14 @@
     "target": "es2015",
     "typeRoots": [
       "./node_modules/@types",
-      "./src/Types"
+      "./types/handbrake-js"
     ]
   },
   "exclude": [
     "node_modules"
   ],
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "types/**/*.d.ts"
   ]
 }

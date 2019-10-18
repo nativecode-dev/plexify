@@ -3,18 +3,23 @@ import throttle from 'promise-parallel-throttle'
 
 import { fs } from '@nofrills/fs'
 
-import { Video } from './Video'
 import { Result, VideoStates } from './Result'
 import { VideoProcessor } from './VideoProcessor'
 import { VideoCollection } from './VideoCollection'
+import { Handbrake } from './Handbrake/Handbrake'
+
+const EXTENSIONS: string[] = ['.avi', '.mp4', '.mpeg', '.mpg', '.ts', '.wmv']
+const GLOBS: string[] = EXTENSIONS.map(ext => `**/*${ext}`)
 
 export class PlexifyManager {
+  private readonly handbrake: Handbrake
   private readonly processor: VideoProcessor
   private readonly videos: VideoCollection
 
   constructor(private readonly directory: string) {
+    this.handbrake = new Handbrake()
     this.videos = new VideoCollection()
-    this.processor = new VideoProcessor(this.videos)
+    this.processor = new VideoProcessor(this.videos, this.handbrake)
 
     watch(directory, async (event, filename) => {
       switch (event) {
@@ -29,7 +34,7 @@ export class PlexifyManager {
     })
   }
 
-  async execute(owner: string, concurrency: number = 2): Promise<Result[]> {
+  async execute(owner: string, rename: boolean, concurrency: number = 2): Promise<Result[]> {
     const throttler = (filename: string) => {
       return async (): Promise<Result> => {
         await this.videos.upsert(filename)
@@ -38,7 +43,7 @@ export class PlexifyManager {
         const convertible = await this.processor.convertible(filename)
 
         if (convertible) {
-          const result = await this.processor.convert(filename, owner)
+          const result = await this.processor.convert(filename, owner, rename)
 
           return {
             state: result ? VideoStates.Converted : VideoStates.Failed,
@@ -53,11 +58,7 @@ export class PlexifyManager {
       }
     }
 
-    const globs = await fs.globs(
-      ['**/*.avi', '**/*.mp4', '**/*.mpeg', '**/*.mpg', '**/*.ts', '**/*.wmv'],
-      this.directory,
-    )
-
+    const globs = await fs.globs(GLOBS, this.directory)
     return throttle.all(globs.map(throttler), { maxInProgress: concurrency })
   }
 }
