@@ -31,10 +31,10 @@ export class DataStore {
           this.log.error(error)
           reject(error)
         } else if (count > 0) {
-          this.log.debug(key, count)
+          this.log.trace(key, count)
           resolve(true)
         } else {
-          this.log.debug(key, count)
+          this.log.trace(key, count)
           resolve(false)
         }
       })
@@ -48,7 +48,7 @@ export class DataStore {
           this.log.error(error)
           reject(error)
         } else {
-          this.log.debug('keys', ...values)
+          this.log.trace('keys', ...values)
           resolve(values)
         }
       })
@@ -63,7 +63,7 @@ export class DataStore {
           reject(error)
         } else {
           const json = JSON.parse(value)
-          this.log.debug(key, json)
+          this.log.trace(key, json)
           resolve(json)
         }
       })
@@ -78,10 +78,10 @@ export class DataStore {
           this.log.error(error)
           reject(error)
         } else if (ok === 'OK') {
-          this.log.debug(key, ok)
+          this.log.trace(key, ok)
           resolve(true)
         } else {
-          this.log.debug(key, ok)
+          this.log.trace(key, ok)
           resolve(false)
         }
       })

@@ -49,10 +49,10 @@ export class VideoManager {
       return [...results, ...mapped]
     }, [])
 
-    this.log.debug('patterns: ', patterns)
+    this.log.trace('patterns: ', patterns)
     const globs = await fs.globs(patterns)
 
-    this.log.debug('found: ', globs.length)
+    this.log.trace('found: ', globs.length)
 
     return globs
   }
@@ -81,7 +81,7 @@ export class VideoManager {
           },
         }
 
-        this.log.debug(queued)
+        this.log.trace(queued)
 
         if (queued.queued === false) {
           await this.datastore.setJson(file, queued)
@@ -111,11 +111,11 @@ export class VideoManager {
       await fs.delete(target)
     }
 
-    this.log.debug('convert: ', video.source)
+    this.log.trace('convert: ', video.source)
 
     const results = await this.handbrake.encode(video.source, target)
 
-    this.log.debug(results.filename, results.success)
+    this.log.trace(results.filename, results.success)
 
     try {
       if (results.success && this.options.rename) {
@@ -142,7 +142,7 @@ export class VideoManager {
     const formatValid = ValidVideoFormats.some(x => format.indexOf(x) >= 0)
     const profileValid = ValidVideoProfiles.some(x => profile.indexOf(x) >= 0)
     const requiresConversion = (formatValid && profileValid) === false
-    this.log.debug(`${file}: ${requiresConversion}, format: ${format}, profile: ${profile}`)
+    this.log.trace(`${file}: ${requiresConversion}, format: ${format}, profile: ${profile}`)
     return requiresConversion
   }
 }

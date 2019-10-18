@@ -34,7 +34,7 @@ export class MediaInfo {
       this.configureOptions(args, argopts)
 
       const command = [this.options.exe, ...argopts, `"${filename}"`].join(' ')
-      this.log.debug(command)
+      this.log.trace(command)
 
       const options: ExecOptions = {
         maxBuffer: this.options.maxBufferSize,
@@ -53,17 +53,12 @@ export class MediaInfo {
   }
 
   private configureOptions(args: string[], opts: string[]): void {
-    const pushBOM = args.every(opt => opt.toUpperCase() !== '--BOM')
     const pushDetails = args.every(opt => opt.toUpperCase().startsWith('--DETAILS=') === false)
     const pushFull = args.every(opt => opt.toUpperCase() !== '--FULL')
     const pushInform = args.every(opt => opt.toUpperCase().startsWith('--INFORM') === false)
     const pushLanguage = args.every(opt => opt.toUpperCase().startsWith('--LANGUAGE=') === false)
     const pushOutput = args.every(opt => opt.toUpperCase().startsWith('--OUTPUT=') === false)
     const hasVersion = args.some(opt => opt === '--Version')
-
-    // if (this.options.bom && pushBOM && hasVersion === false) {
-    //   opts.push('--BOM')
-    // }
 
     if (this.options.full && pushFull && hasVersion === false) {
       opts.push('--Full')

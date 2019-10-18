@@ -39,7 +39,8 @@ export class Handbrake {
 
     return new Promise((resolve, reject) => {
       let errored = false
-      this.log.debug(options)
+      this.log.trace(options)
+
       const child = spawn(options)
         .on(HandbrakeEvent.Cancelled, () => {
           this.log.info(`Encoding ${source} cancelled`)

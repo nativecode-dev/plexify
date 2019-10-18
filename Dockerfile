@@ -35,7 +35,7 @@ RUN set -ex \
 # STAGE: Final
 #------------------------------------------------------------------------------
 FROM BASE
-ENV DEBUG="plexify:*"
+ENV DEBUG="plexify:*,-plexify:*:trace"
 ENV PLEXIFY_RENAME="false"
 ENV PLEXIFY_DRYRUN="true"
 ENV PLEXIFY_MOUNT="/mnt/media"
