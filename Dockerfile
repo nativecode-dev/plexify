@@ -1,20 +1,13 @@
 # STAGE: Base Image
 #------------------------------------------------------------------------------
 FROM node:8-jessie-slim AS BASE
-LABEL MAINTAINER=opensource@nativecode.com
-ENV DEBIAN_FRONTEND=noninteractive
+LABEL MAINTAINER opensource@nativecode.com
+ENV DEBIAN_FRONTEND noninteractive
 RUN set -ex \
   && apt-get update \
   && apt-get install -y handbrake-cli mediainfo \
+  && npm install -g pm2 \
   ;
-# FROM jlesage/handbrake:v1.16.0  AS BASE
-# LABEL MAINTAINER=opensource@nativecode.com
-# ENV DEBIAN_FRONTEND=noninteractive
-# RUN set -ex \
-# #  && sed -i -e 's/v[[:digit:]]\.[[:digit:]]/edge/g' /etc/apk/repositories \
-# #  && apk upgrade --update-cache \
-#   && apk add mediainfo nodejs nodejs-npm \
-#   ;
 
 # STAGE: Build
 #------------------------------------------------------------------------------
@@ -35,12 +28,12 @@ RUN set -ex \
 # STAGE: Final
 #------------------------------------------------------------------------------
 FROM BASE
-ENV DEBUG="plexify:*,-plexify:*:trace"
-ENV PLEXIFY_RENAME="false"
-ENV PLEXIFY_DRYRUN="true"
-ENV PLEXIFY_MOUNT="/mnt/media"
-ENV PLEXIFY_REDIS_HOST="redis"
-ENV PLEXIFY_REDIS_PORT="6379"
+ENV DEBUG "plexify:*,-plexify:*:debug,-plexify:*:trace"
+ENV PLEXIFY_RENAME "false"
+ENV PLEXIFY_DRYRUN "true"
+ENV PLEXIFY_MOUNT "/mnt/media"
+ENV PLEXIFY_REDIS_HOST "redis"
+ENV PLEXIFY_REDIS_PORT "6379"
 COPY --from=BUILD /build/dist /app
 WORKDIR /app
 RUN set -ex \
@@ -49,7 +42,8 @@ RUN set -ex \
   && which HandBrakeCLI \
   && which mediainfo \
   && which node \
+  && which pm2 \
   ;
 VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/local/bin/node", "plexify.js"]
+CMD ["/usr/local/bin/pm2", "start", "plexify.js"]
