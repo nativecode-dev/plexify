@@ -46,4 +46,4 @@ RUN set -ex \
   ;
 VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/local/bin/pm2", "start", "plexify.js"]
+CMD ["/usr/local/bin/pm2-runtime", "--raw", "/app/plexify.js"]
