@@ -1,44 +1,44 @@
-import { Logger } from './Logging'
-import { DefaultMediaInfoOptions } from './MediaInfo/MediaInfo'
-import { DefaultHandbrakeOptions } from './Handbrake/Handbrake'
-import { VideoManagerOptions } from './VideoManager/VideoManagerOptions'
-import { VideoManager, DefaultVideoManagerOptions } from './VideoManager/VideoManager'
+import yargs, { Argv, Arguments, Options, PositionalOptions } from 'yargs'
 
-async function main() {
-  const dryRun = process.env.PLEXIFY_DRYRUN === 'true'
+process.on('uncaughtException', (error: Error) => console.error(error))
+process.on('unhandledRejection', (response: {} | null | undefined) => console.log(response))
 
-  const options: VideoManagerOptions = {
-    ...DefaultVideoManagerOptions,
-    ...{
-      datastore: {
-        host: process.env.PLEXIFY_REDIS_HOST || 'localhost',
-        port: parseInt(process.env.PLEXIFY_REDIS_PORT || '6379', 0),
-      },
-      paths: [process.env.PLEXIFY_MOUNT || '/mnt/media'],
-      rename: process.env.PLEXIFY_RENAME === 'true',
-      handbrake: { ...DefaultHandbrakeOptions },
-      mediainfo: { ...DefaultMediaInfoOptions },
+yargs
+  .scriptName('plexify')
+  .usage('usage: $0 <command>')
+  .command('convert <path> [options]', 'convert video files to standard format', {
+    builder: (argv: Argv): Argv => {
+      return argv
+        .positional<string, PositionalOptions>('path', {
+          desc: 'path to files',
+          type: 'string',
+        })
+        .option<string, Options>('execute', {
+          boolean: true,
+          default: false,
+          type: 'boolean',
+        })
+        .option<string, Options>('rename', {
+          boolean: true,
+          default: false,
+          type: 'boolean',
+        })
     },
-  }
-
-  Logger.debug(options)
-
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-  while (true) {
-    const manager = new VideoManager(options)
-    const files = await manager.find()
-    const scans = await manager.scan(files)
-
-    if (dryRun === false) {
-      const queued = scans.filter(scan => scan.queued)
-      Logger.info('encode', queued)
-      await manager.encode(queued.map(scan => scan.video))
-    }
-
-    Logger.info('sleep')
-    await sleep(5 * (1000 * 60))
-  }
-}
-
-main().catch(console.log)
+    handler: (args: Arguments): void => {
+      console.log(args)
+    },
+  })
+  .command('list <path>', 'list video files and states', {
+    builder: (argv: Argv): Argv => {
+      return argv.positional<string, PositionalOptions>('path', {
+        desc: 'path to files',
+        type: 'string',
+      })
+    },
+    handler: (args: Arguments): void => {
+      console.log(args)
+    },
+  })
+  .demandCommand()
+  .showHelpOnFail(true)
+  .parse()

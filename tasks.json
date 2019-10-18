@@ -1,0 +1,16 @@
+{
+  "tasks": {
+    "build": [
+      "tsc --project tsconfig.json",
+      "ncc build bin/plexify.js --out bin/dist",
+      "nexe --output dist/plexify --resource \"./dist/locales/**/*\" --target linux-x64"
+    ],
+    "lint": [
+      "jsonsort *.json",
+      "jsonsort src/**/*.json"
+    ],
+    "watch": [
+      "tsc --project tsconfig.json --watch"
+    ]
+  }
+}

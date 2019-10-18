@@ -5,6 +5,7 @@
 .artifacts
 .cache
 bin
+binaries
 dist
 lib
 node_modules

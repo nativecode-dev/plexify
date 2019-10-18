@@ -3,9 +3,11 @@
   "description": "Plexify's video files",
   "keywords": [],
   "license": "Apache-2.0",
-  "main": "dist/plexify",
+  "main": "bin/plexify",
+  "bin": {
+    "plexify": "bin/plexify"
+  },
   "name": "plexify",
-  "typings": "dist/plexify",
   "version": "0.0.0",
   "dependencies": {
     "@nofrills/fs": "^7.0.0",
@@ -13,29 +15,37 @@
     "@nofrills/lincoln-debug": "^6.0.0",
     "@nofrills/types": "^6.0.0",
     "handbrake-js": "^4.0.1",
-    "node-schedule": "^1.3.2",
-    "promise-parallel-throttle": "^3.3.0",
-    "redis": "^2.8.0"
+    "pouchdb": "^7.1.1",
+    "pouchdb-adapter-http": "^7.1.1",
+    "pouchdb-adapter-memory": "^7.1.1",
+    "pouchdb-find": "^7.1.1",
+    "pouchdb-upsert": "^2.2.0",
+    "yargs": "^14.2.0",
+    "yargs-interactive": "^3.0.0"
   },
   "devDependencies": {
-    "@types/minimist": "^1.2.0",
+    "@nofrills/tasks": "^9.0.2",
     "@types/node": "^12.11.1",
-    "@types/node-schedule": "^1.2.4",
-    "@types/redis": "^2.8.14",
-    "@types/webpack": "^4.39.3",
+    "@types/pouchdb": "^6.4.0",
+    "@types/pouchdb-adapter-http": "^6.1.3",
+    "@types/pouchdb-adapter-memory": "^6.1.3",
+    "@types/pouchdb-find": "^6.3.4",
+    "@types/pouchdb-upsert": "^2.2.6",
+    "@types/yargs": "^13.0.3",
+    "@types/yargs-interactive": "^2.1.0",
+    "@zeit/ncc": "^0.20.5",
     "cross-env": "^6.0.3",
     "husky": "^3.0.9",
+    "json-sort-cli": "^1.14.4",
+    "nexe": "^3.3.2",
     "npm-check": "^5.9.0",
     "prettier": "^1.18.2",
     "rimraf": "^3.0.0",
-    "ts-loader": "^6.2.0",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.0",
     "tslint-config-standard": "^8.0.1",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "^3.6.4",
-    "webpack": "^4.41.2",
-    "webpack-cli": "^3.3.9"
+    "typescript": "^3.6.4"
   },
   "husky": {
     "hooks": {
@@ -46,14 +56,7 @@
     "url": "https://github.com/nativecode-dev/plexify"
   },
   "scripts": {
-    "build": "rimraf dist && webpack-cli",
-    "encode": "cross-env DEBUG=plexify:* ts-node src/plexify",
-    "prebuild": "tslint --project tsconfig.json --config tslint.json",
-    "test": "docker run --rm --name plexify-debug -e PLEXIFY_DRYRUN=false -e PLEXIFY_RENAME=true -v /home/mpham/Videos:/mnt/media nativecode/plexify:latest",
-    "pretest": "npm run docker-build",
-    "docker-build": "docker build --rm -t nativecode/plexify:latest .",
-    "predocker-build": "npm run build",
-    "docker-push": "docker push nativecode/plexify:latest",
-    "predocker-push": "npm run docker-build"
+    "build": "cli-tasks build",
+    "watch": "cli-tasks watch"
   }
 }

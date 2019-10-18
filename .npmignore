@@ -1,0 +1,15 @@
+binaries/
+dist/
+src/
+
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
+.npmignore
+.npmrc
+.pterrierrc
+Dockerfile
+tasks.json
+tsconfig.json
+tslint.json
