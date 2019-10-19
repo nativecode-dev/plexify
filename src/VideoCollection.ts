@@ -1,6 +1,6 @@
 import deepmerge from 'deepmerge'
 
-import CreateDataStore from './CreateDataStore'
+import CreateDataStore, { DataStoreOptions } from './CreateDataStore'
 
 import { Video } from './Video'
 
@@ -8,13 +8,20 @@ export class VideoCollection {
   private readonly datastore: PouchDB.Database<Video>
 
   constructor() {
-    this.datastore = CreateDataStore({
+    const options: DataStoreOptions = {
       name: 'videos',
       values: {
         adapter: 'memory',
+        auto_compaction: true,
         name: 'videos',
       },
-    })
+    }
+
+    this.datastore = CreateDataStore(options)
+  }
+
+  close(): Promise<void> {
+    return this.datastore.close()
   }
 
   get(filename: string): Promise<Video> {
@@ -38,8 +45,8 @@ export class VideoCollection {
   }
 
   async list(): Promise<Video[]> {
-    const response = await this.datastore.find({ selector: {} })
-    return response.docs
+    const response = await this.datastore.allDocs<Video>({ include_docs: true })
+    return response.rows.map(row => row.doc) as Video[]
   }
 
   async remove(filename: string): Promise<boolean> {

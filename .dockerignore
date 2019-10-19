@@ -1,13 +1,16 @@
-.vs
-.vscode
-dist
-node_modules
+.vs/
+.vscode/
+.git/
+bin/
+dist/
+lib/
+node_modules/
 
 .dockerignore
-.drone.yml
 .editorconfig
-.git
+.gitattributes
 .gitignore
+.npmignore
 .npmrc
-.yarnrc
+docker-compose.yaml
 Dockerfile

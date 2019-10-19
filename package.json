@@ -14,6 +14,7 @@
   "main": "bin/plexify",
   "scripts": {
     "build": "cli-tasks build",
+    "cli": "ts-node --files --pretty src/plexify.ts",
     "watch": "cli-tasks watch"
   },
   "husky": {
@@ -25,6 +26,7 @@
     "@nofrills/fs": "^7.0.0",
     "@nofrills/lincoln": "^6.0.0",
     "@nofrills/lincoln-debug": "^6.0.0",
+    "@nofrills/scrubs": "^6.0.2",
     "@nofrills/types": "^6.0.0",
     "deepmerge": "^4.1.1",
     "handbrake-js": "^4.0.1",

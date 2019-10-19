@@ -4,7 +4,7 @@
       "[lint]",
       "tsc --project tsconfig.json",
       "ncc build bin/plexify.js --out bin/dist",
-      "nexe --output dist/plexify --resource \"./dist/locales/**/*\" --target linux-x64"
+      "nexe --output dist/plexify --resource \"./bin/dist/locales/**/*\" --target linux-x64"
     ],
     "lint": [
       "jsonsort *.json",

@@ -3,23 +3,30 @@
 FROM node:8-jessie-slim AS BASE
 LABEL MAINTAINER opensource@nativecode.com
 ENV DEBIAN_FRONTEND noninteractive
+WORKDIR /app
+COPY /package-lock.json /app/package-lock.json
+COPY /package.json /app/package.json
 RUN set -ex \
   && apt-get update \
-  && apt-get install -y handbrake-cli mediainfo \
+  && apt-get -qq install -y handbrake-cli mediainfo \
   && npm install -g pm2 \
+  && npm install --production \
   ;
 
 # STAGE: Build
 #------------------------------------------------------------------------------
 FROM BASE as BUILD
-COPY package-lock.json /build/package-lock.json
-COPY package.json /build/package.json
-COPY tsconfig.json /build/tsconfig.json
-COPY tslint.json /build/tslint.json
-COPY webpack.config.ts /build/webpack.config.ts
-COPY aliases /build/aliases
-COPY src /build/src
 WORKDIR /build
+# Copy required configuration
+COPY /.prettierrc /build/.prettierrc
+COPY /package-lock.json /build/package-lock.json
+COPY /package.json /build/package.json
+COPY /tasks.json /build/tasks.json
+COPY /tsconfig.json /build/tsconfig.json
+COPY /tslint.json /build/tslint.json
+# Copy source
+COPY /src /build/src
+COPY /types /build/types
 RUN set -ex \
   && npm install \
   && npm run build \
@@ -34,9 +41,11 @@ ENV PLEXIFY_DRYRUN "true"
 ENV PLEXIFY_MOUNT "/mnt/media"
 ENV PLEXIFY_REDIS_HOST "redis"
 ENV PLEXIFY_REDIS_PORT "6379"
-COPY --from=BUILD /build/dist /app
 WORKDIR /app
+COPY --from=BUILD /build/bin /app
+COPY /docker-entry.sh /app/docker-entry.sh
 RUN set -ex \
+  && chmod +x /app/docker-entry.sh \
   && mkdir /root/.plexify \
   && mkdir /mnt/media \
   && which HandBrakeCLI \
@@ -44,6 +53,5 @@ RUN set -ex \
   && which node \
   && which pm2 \
   ;
-VOLUME /root/.plexify
 VOLUME /mnt/media
-CMD ["/usr/local/bin/pm2-runtime", "--raw", "--watch", "/app/plexify.js"]
+CMD ["/app/docker-entry.sh"]
