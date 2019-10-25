@@ -1,10 +1,10 @@
 import watch from 'node-watch'
-import mediainfo from 'node-mediainfo'
 
 import { fs } from '@nofrills/fs'
 import { all as throttle } from 'promise-parallel-throttle'
 
 import Logger from './Logger'
+import JsonMediaInfo, { MediaInfo } from './JsonMediaInfo'
 
 import { Result, VideoStates } from './Result'
 import { Handbrake } from './Handbrake/Handbrake'
@@ -78,12 +78,9 @@ export class PlexifyManager {
     }
   }
 
-  async fileinfo(filename: string): Promise<{ track: any[] }> {
+  async fileinfo(filename: string): Promise<MediaInfo> {
     try {
-      const info = await mediainfo(filename)
-      return {
-        track: info.media.track,
-      }
+      return JsonMediaInfo(filename)
     } catch (error) {
       this.log.error(error)
       throw error

@@ -1,6 +1,6 @@
-import mediainfo from 'node-mediainfo'
-
 import { fs } from '@nofrills/fs'
+
+import JsonMediaInfo from 'json-mediainfo'
 
 import { VideoCollection } from './VideoCollection'
 import { Handbrake } from './Handbrake/Handbrake'
@@ -9,7 +9,7 @@ export class VideoProcessor {
   constructor(private readonly videos: VideoCollection, private readonly handbrake: Handbrake) {}
 
   async convertible(filename: string): Promise<boolean> {
-    const info = await mediainfo(filename)
+    const info = await JsonMediaInfo(filename)
     console.log(info)
     return Promise.reject()
   }

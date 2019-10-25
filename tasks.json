@@ -3,7 +3,7 @@
     "build": [
       "[lint]",
       "tsc --project tsconfig.json",
-      "ncc build bin/plexify.js --out bin/dist",
+      "ncc build bin/plexify.js --out dist",
       "nexe --output dist/plexify --resource \"./bin/dist/locales/**/*\" --target linux-x64"
     ],
     "lint": [

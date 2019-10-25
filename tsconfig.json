@@ -25,8 +25,8 @@
     "strictNullChecks": true,
     "target": "es2015",
     "typeRoots": [
-      "./node_modules/@types",
-      "./types/handbrake-js"
+      "node_modules/@types",
+      "types"
     ]
   },
   "exclude": [
