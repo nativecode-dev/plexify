@@ -7,22 +7,29 @@ import Logger from '../Logger'
 import { GlobalOptions } from './options/GlobalOptions'
 import { PlexifyManager } from '../PlexifyManager'
 
-export type ListCommandOptions = {} & GlobalOptions
+export interface ListOptions extends GlobalOptions {}
 
 const log = Logger.extend('command:list')
 
-const ListCommand: CommandModule<{}, ListCommandOptions> = {
+const ListCommand: CommandModule<{}, ListOptions> = {
   aliases: ['ls'],
   command: 'list <path>',
   builder: {},
 
-  handler: async (args: Arguments<ListCommandOptions>) => {
+  handler: async (args: Arguments<ListOptions>) => {
     const manager = new PlexifyManager(args.path)
-    const files = await manager.files()
-    log.trace(args, files)
-    const infos = await throttle(files.map(file => () => manager.fileinfo(file)))
-    infos.forEach(info => console.log(info))
-    process.exit(0)
+
+    try {
+      const files = await manager.files()
+      log.trace(args, files)
+      const infos = await throttle(files.map(file => () => manager.fileinfo(file)))
+      infos.forEach(info => console.log(info))
+    } catch (error) {
+      log.error(error)
+      process.exit(-1)
+    } finally {
+      process.exit(0)
+    }
   },
 }
 
