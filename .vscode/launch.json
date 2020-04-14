@@ -1,14 +1,21 @@
 {
   "version": "0.2.0",
-  "configurations": [{
-    "type": "node",
-    "request": "launch",
-    "name": "Debug",
-    "args": ["src/plexify.ts"],
-    "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
-    "sourceMaps": true,
-    "cwd": "${workspaceRoot}",
-    "protocol": "inspector",
-    "useWSL": true
-  }]
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug",
+      "args": [
+        "src/index.ts"
+      ],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
+      "sourceMaps": true,
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector",
+    }
+  ]
 }
