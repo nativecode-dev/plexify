@@ -47,7 +47,6 @@ export class MediaScanner extends EventEmitter {
           this.emit(MediaScanner.events.progress)
 
           if (this.codec_allowed(audio.codec_name) === false || this.codec_allowed(video.codec_name) === false) {
-            console.log(filename, info.format.format_name, audio.codec_name, video.codec_name)
             return stream_file
           }
 

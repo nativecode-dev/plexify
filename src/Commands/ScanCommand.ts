@@ -1,3 +1,4 @@
+import { MultiBar, Presets } from 'cli-progress'
 import { CommandModule, Arguments, CommandBuilder } from 'yargs'
 
 import { ScanOptions } from '../Options/ScanOptions'
@@ -16,7 +17,27 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
   }
 
   handler = async (args: Arguments<ScanOptions>) => {
+    const bars = new MultiBar(
+      {
+        format: '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
+        stopOnComplete: true,
+      },
+      Presets.shades_classic,
+    )
+
+    const scanbar = bars.create(0, 0, { message: 'scanner' })
+
     const scanner = new MediaScanner()
+
+    scanner.on('progress', () => scanbar.increment(1))
+    scanner.on('start', (total: number) => {
+      scanbar.start(total, 0, { message: 'scanning' })
+    })
+    scanner.on('stop', () => {
+      scanbar.stop()
+      bars.remove(scanbar)
+    })
+
     await scanner.scan(args.path, args.minutes, true)
   }
 }

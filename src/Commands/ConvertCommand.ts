@@ -46,13 +46,22 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
   handler = async (args: Arguments<ConvertOptions>) => {
     const bars = new MultiBar(
       {
-        format: '[{bar} {percentage}%] ETA: {eta_formatted} - {filename}',
+        format: '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
         stopOnComplete: true,
       },
       Presets.shades_classic,
     )
 
+    const scanbar = bars.create(0, 0, { message: 'scanner' })
     const scanner = new MediaScanner()
+
+    scanner.on('progress', () => scanbar.increment(1))
+    scanner.on('start', (total: number) => scanbar.start(total, 0, { message: 'scanning' }))
+    scanner.on('stop', () => {
+      scanbar.stop()
+      bars.remove(scanbar)
+    })
+
     const scanned_results = await scanner.scan(args.path, args.minutes, args.reverse)
 
     const filter = (results: StreamFile[]) => {
@@ -71,22 +80,22 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
 
     let current = 0
 
-    const payload = { filename: args.path }
+    const payload = { message: args.path }
     const filebar = bars.create(files.length, current, payload)
 
     filebar.start(files.length, current, payload)
 
     await Throttle(
       files.map((stream_file) => async () => {
-        const conversion = bars.create(100, 0, { filename: fs.basename(stream_file.filename) })
+        const conversion = bars.create(100, 0, { message: fs.basename(stream_file.filename) })
         const converter = new MediaConverter()
 
         const handle_progress = (progress: StreamProgress) => {
-          conversion.update(progress.percent, { filename: fs.basename(stream_file.filename) })
+          conversion.update(progress.percent, { message: fs.basename(stream_file.filename) })
           filebar.update(current)
         }
 
-        const handle_start = () => conversion.start(100, 0, { filename: stream_file.filename })
+        const handle_start = () => conversion.start(100, 0, { message: stream_file.filename })
 
         const handle_stop = () => {
           current++
