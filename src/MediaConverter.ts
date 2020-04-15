@@ -90,23 +90,17 @@ export class MediaConverter extends EventEmitter {
           if (context.dryrun === false) {
             await fs.delete(context.file.filename)
           }
-
-          console.log('delete', 'invalid extension')
         }
 
         if (await fs.exists(context.filename.converted)) {
           if (context.dryrun === false) {
             await fs.delete(context.filename.converted)
           }
-
-          console.log('delete', 'exists', fs.basename(context.filename.converted))
         }
 
         if (context.dryrun === false) {
           await fs.rename(context.filename.processing, context.filename.converted)
         }
-
-        console.log('rename', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
       this.emit(MediaConverter.events.stop)

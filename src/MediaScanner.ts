@@ -1,4 +1,4 @@
-import moment, { min } from 'moment'
+import moment from 'moment'
 
 import { FfprobeData, FfprobeStream } from 'fluent-ffmpeg'
 
