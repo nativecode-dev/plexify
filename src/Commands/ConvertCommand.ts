@@ -81,17 +81,31 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
         const conversion = bars.create(100, 0, { filename: fs.basename(stream_file.filename) })
         const converter = new MediaConverter()
 
-        converter.on('progress', (progress: StreamProgress) => {
+        const handle_progress = (progress: StreamProgress) => {
           conversion.update(progress.percent, { filename: fs.basename(stream_file.filename) })
           filebar.update(current)
-        })
+        }
 
-        converter.on('stop', () => {
+        const handle_start = () => conversion.start(100, 0, { filename: stream_file.filename })
+
+        const handle_stop = () => {
           current++
           bars.remove(conversion)
-        })
+        }
 
-        await converter.convert(stream_file, args.rename, args.dryrun)
+        converter.on('start', handle_start)
+        converter.on('stop', handle_stop)
+        converter.on('progress', handle_progress)
+
+        try {
+          await converter.convert(stream_file, args.rename, args.dryrun)
+        } catch (error) {
+          throw error
+        } finally {
+          converter.off('progress', handle_progress)
+          converter.off('stop', handle_stop)
+          converter.off('start', handle_start)
+        }
 
         filebar.increment(1)
       }),
