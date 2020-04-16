@@ -2,20 +2,17 @@ import { MultiBar, SingleBar, Presets } from 'cli-progress'
 
 import { PlexifyOptions } from './Options/PlexifyOptions'
 
+const DefaultBarFormat = '[{bar} {percentage}%] ETA: {eta_formatted} - {message}'
+
 export class BarManager {
   private readonly bars: Map<string, SingleBar> = new Map()
 
   private multibar: MultiBar
 
-  constructor(
-    private readonly options: PlexifyOptions,
-    private readonly format: string = '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
-  ) {
-    this.initialize()
-  }
+  constructor(private readonly options: PlexifyOptions, private readonly format: string = DefaultBarFormat) {}
 
   initialize() {
-    if (this.options.disableBars) {
+    if (this.options.disableBars || this.multibar) {
       return
     }
 
@@ -33,6 +30,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.multibar.create(100, 0, {})
     this.bars.set(name, bar)
   }
@@ -42,6 +40,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.bars.get(name)
 
     if (bar) {
@@ -54,6 +53,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.bars.get(name)
 
     if (bar) {
@@ -68,6 +68,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.bars.get(name)
 
     if (bar) {
@@ -80,6 +81,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.bars.get(name)
 
     if (bar) {
@@ -92,6 +94,7 @@ export class BarManager {
       return
     }
 
+    this.initialize()
     const bar = this.bars.get(name)
 
     if (bar) {

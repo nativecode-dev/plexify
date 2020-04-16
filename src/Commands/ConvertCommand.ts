@@ -56,22 +56,15 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
     bars.createBar(scanbar)
 
     scanner.on('progress', () => {
-      if (args.disableBars === false) {
-        bars.incrementBar(scanbar)
-      }
+      bars.incrementBar(scanbar)
     })
 
     scanner.on('start', (total: number) => {
-      if (args.disableBars === false) {
-        bars.startBar(scanbar, total, { message: 'scanning' })
-      }
+      bars.startBar(scanbar, total, { message: 'scanning' })
     })
 
     scanner.on('stop', () => {
-      if (args.disableBars === false) {
-        bars.stopBar(scanbar)
-      }
-
+      bars.stopBar(scanbar)
       bars.removeBar(scanbar)
     })
 
@@ -94,15 +87,17 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
         const id = fs.basename(file.filename)
         const converter = new MediaConverter(Logger)
 
-        bars.createBar(id)
-
         const handleProgress = (progress: StreamProgress) => {
           bars.updateBar(id, progress.percent, { message: fs.basename(file.filename) })
         }
 
-        const handleStart = () => bars.startBar(id, 100, { message: file.filename })
+        const handleStart = () => {
+          bars.createBar(id)
+          bars.startBar(id, 100, { message: file.filename })
+        }
 
         const handleStop = () => {
+          bars.stopBar(id)
           bars.removeBar(id)
         }
 

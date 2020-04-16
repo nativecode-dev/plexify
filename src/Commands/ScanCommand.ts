@@ -32,25 +32,17 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
     const scanbar = 'scanbar'
     const scanner = new MediaScanner(Logger)
 
-    bars.createBar(scanbar)
-
     scanner.on('progress', () => {
-      if (args.disableBars === false) {
-        bars.incrementBar(scanbar, 1)
-      }
+      bars.incrementBar(scanbar)
     })
 
     scanner.on('start', (total: number) => {
-      if (args.disableBars === false) {
-        bars.startBar(scanbar, total, { message: 'scanning' })
-      }
+      bars.createBar(scanbar)
+      bars.startBar(scanbar, total, { message: 'scanning' })
     })
 
     scanner.on('stop', () => {
-      if (args.disableBars === false) {
-        bars.stopBar(scanbar)
-      }
-
+      bars.stopBar(scanbar)
       bars.removeBar(scanbar)
     })
 
