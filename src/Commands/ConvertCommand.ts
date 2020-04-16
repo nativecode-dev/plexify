@@ -68,9 +68,7 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
       bars.remove(scanbar)
     })
 
-    const scanned = await scanner.scan(args.path, args.minutes, args.reverse, (filename) =>
-      args.filenames.some((name) => name.endsWith(filename)),
-    )
+    const scanned = await scanner.scan(args.path, args.minutes, args.reverse)
 
     const filter = (results: StreamFile[]) => {
       return results.filter((scanned) =>

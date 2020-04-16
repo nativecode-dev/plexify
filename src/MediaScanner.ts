@@ -13,8 +13,6 @@ import { getMediaInfo } from './MediaFunctions'
 
 export type MediaFileNameFilter = (filename: string) => boolean
 
-const DefaultMediaFileNameFilter = () => true
-
 export class MediaScanner extends EventEmitter {
   static readonly codecs = ['aac', 'hevc']
   static readonly extensions = ['avi', 'mkv', 'mp4', 'mpeg', 'mpg', 'wmv']
@@ -34,19 +32,9 @@ export class MediaScanner extends EventEmitter {
     this.media = new MediaStore()
   }
 
-  async scan(
-    path: string,
-    minutes: number = 120,
-    reverse: boolean = false,
-    filter: MediaFileNameFilter = DefaultMediaFileNameFilter,
-  ) {
+  async scan(path: string, minutes: number = 120, reverse: boolean = false) {
     const unsorted = await fs.globs(this.globs, path)
-
-    const sorted = this.applySort(
-      unsorted.filter((filename) => filter(filename)),
-      reverse,
-    )
-
+    const sorted = this.applySort(unsorted, reverse)
     const filtered = await this.applyAgeFilter(sorted, minutes)
 
     const total = filtered.length
