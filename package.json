@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@nnode/common": "^0.3.2",
+    "@nnode/lincoln": "^0.1.3",
+    "@nnode/lincoln-debug": "^0.1.3",
     "@nofrills/fs": "^11.0.0",
     "cli-progress": "^3.7.0",
     "fluent-ffmpeg": "^2.1.2",

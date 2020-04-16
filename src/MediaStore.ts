@@ -15,7 +15,7 @@ export class MediaStore {
   }
 
   lock(id: string, filename: string, source: FfprobeData) {
-    return this.upsert({ _id: id, host: os.hostname(), locked: true, filename, source })
+    return this.upsert(id, filename, source, true, os.hostname())
   }
 
   async locked(id: string) {
@@ -24,13 +24,15 @@ export class MediaStore {
   }
 
   unlock(id: string, filename: string, source: FfprobeData) {
-    return this.upsert({ _id: id, host: null, locked: false, filename, source })
+    return this.upsert(id, filename, source, false, null)
   }
 
-  upsert(source: MediaInfo) {
-    return this.database.upsert<MediaInfo>(source._id, (target: MediaInfo) => {
-      target.filename = source.filename
-      target.source = source.source
+  upsert(id: string, filename: string, source: FfprobeData, locked: boolean = false, host: string | null = null) {
+    return this.database.upsert<MediaInfo>(id, (target: MediaInfo) => {
+      target.filename = filename
+      target.host = host
+      target.locked = locked
+      target.source = source
       return target
     })
   }

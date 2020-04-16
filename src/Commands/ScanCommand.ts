@@ -1,14 +1,21 @@
+import { fs } from '@nofrills/fs'
 import { MultiBar, Presets } from 'cli-progress'
 import { CommandModule, Arguments, CommandBuilder } from 'yargs'
 
-import { ScanOptions } from '../Options/ScanOptions'
+import { Logger } from '../Logger'
 import { MediaScanner } from '../MediaScanner'
+import { ScanOptions } from '../Options/ScanOptions'
+import { createChildBar } from '../BarFunctions'
 
 export class ScanCommand implements CommandModule<{}, ScanOptions> {
   aliases = ['scan']
   command = 'scan <path> [filenames..]'
 
   builder: CommandBuilder<{}, ScanOptions> = {
+    'disable-bars': {
+      default: false,
+      type: 'boolean',
+    },
     minutes: {
       alias: 'a',
       default: 120,
@@ -21,7 +28,7 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
     },
   }
 
-  handler = async (args: Arguments<ScanOptions>) => {
+  async handler(args: Arguments<ScanOptions>) {
     const bars = new MultiBar(
       {
         format: '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
@@ -30,25 +37,36 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
       Presets.shades_classic,
     )
 
-    const scanbar = bars.create(100, 0, { message: 'scanner' })
-    const scanner = new MediaScanner()
+    const scanbar = createChildBar(bars)
+    const scanner = new MediaScanner(Logger)
+
+    if (args.disableBars === false) {
+      bars.remove(scanbar)
+    }
 
     scanner.on('progress', () => {
-      scanbar.increment(1)
+      if (args.disableBars === false) {
+        scanbar.increment(1)
+      }
     })
 
     scanner.on('start', (total: number) => {
-      scanbar.start(total, 0, { message: 'scanning' })
+      if (args.disableBars === false) {
+        scanbar.start(total, 0, { message: 'scanning' })
+      }
     })
 
     scanner.on('stop', () => {
-      scanbar.stop()
+      if (args.disableBars === false) {
+        scanbar.stop()
+      }
+
       bars.remove(scanbar)
     })
 
     const results = await scanner.scan(args.path, args.minutes, args.reverse, (filename) => {
       if (args.filenames.length > 0) {
-        return args.filenames.some((name) => name.endsWith(filename))
+        return args.filenames.some((name) => fs.basename(filename).toLowerCase() === name.toLowerCase())
       }
 
       return true

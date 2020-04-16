@@ -1,6 +1,6 @@
-import { Options } from 'yargs'
+import { PlexifyOptions } from './PlexifyOptions'
 
-export interface ScanOptions extends Options {
+export interface ScanOptions extends PlexifyOptions {
   filenames: string[]
   minutes: number
   path: string

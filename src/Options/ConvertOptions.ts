@@ -1,6 +1,6 @@
-import { Options } from 'yargs'
+import { PlexifyOptions } from './PlexifyOptions'
 
-export interface ConvertOptions extends Options {
+export interface ConvertOptions extends PlexifyOptions {
   dryrun: boolean
   filenames: string[]
   minutes: number

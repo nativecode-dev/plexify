@@ -1,5 +1,5 @@
-import { Options } from 'yargs'
+import { PlexifyOptions } from './PlexifyOptions'
 
-export interface InfoOptions extends Options {
+export interface InfoOptions extends PlexifyOptions {
   filename: string
 }

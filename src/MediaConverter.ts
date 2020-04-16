@@ -7,6 +7,7 @@ import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { MediaError } from './Errors/MediaError'
 import { StreamProgress } from './StreamProgress'
+import { Lincoln } from '@nnode/lincoln'
 
 interface Context {
   dryrun: boolean
@@ -31,14 +32,17 @@ export class MediaConverter extends EventEmitter {
     stop: 'stop',
   }
 
+  private readonly log: Lincoln
   private readonly store: MediaStore
 
   constructor(
+    logger: Lincoln,
     private readonly format: string = 'mp4',
     private readonly audioCodec: string = 'aac',
     private readonly videoCodec: string = 'libx265',
   ) {
     super()
+    this.log = logger.extend('converter')
     this.store = new MediaStore()
   }
 

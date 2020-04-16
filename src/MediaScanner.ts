@@ -10,6 +10,7 @@ import { Throttle } from '@nnode/common'
 import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { getMediaInfo } from './MediaFunctions'
+import { Lincoln } from '@nnode/lincoln'
 
 export type MediaFileNameFilter = (filename: string) => boolean
 
@@ -26,11 +27,17 @@ export class MediaScanner extends EventEmitter {
   }
 
   private readonly globs: string[]
+  private readonly log: Lincoln
   private readonly media: MediaStore
 
-  constructor(allowedExtensions = MediaScanner.extensions, private readonly allowedCodecs = MediaScanner.codecs) {
+  constructor(
+    logger: Lincoln,
+    allowedExtensions = MediaScanner.extensions,
+    private readonly allowedCodecs = MediaScanner.codecs,
+  ) {
     super()
     this.globs = allowedExtensions.map((glob) => `**/*.${glob}`)
+    this.log = logger.extend('scanner')
     this.media = new MediaStore()
   }
 
@@ -40,16 +47,26 @@ export class MediaScanner extends EventEmitter {
     reverse: boolean = false,
     filter: MediaFileNameFilter = DefaultMediaFileNameFilter,
   ) {
+    this.log.info('scan', 'gathering globs')
+
     const unsorted = await fs.globs(this.globs, path)
 
-    const sorted = this.applySort(
-      unsorted.filter((filename) => filter(filename)),
-      reverse,
+    this.log.trace('scan', 'unsorted', unsorted.length)
+
+    const sorted = this.applySort(unsorted, reverse)
+
+    this.log.trace('scan', 'sorted', sorted.length, reverse)
+
+    const filtered = await this.applyAgeFilter(
+      sorted.filter((filename) => filter(filename)),
+      minutes,
     )
 
-    const filtered = await this.applyAgeFilter(sorted, minutes)
+    this.log.trace('scan', 'filtered', filtered.length)
 
     const total = filtered.length
+
+    this.log.trace('scan', 'total', total)
 
     this.emit(MediaScanner.events.start, total)
 
@@ -63,13 +80,7 @@ export class MediaScanner extends EventEmitter {
 
           const id = fs.basename(filename)
 
-          await this.media.upsert({
-            _id: id,
-            filename,
-            host: null,
-            locked: false,
-            source: info,
-          })
+          await this.media.upsert(id, filename, info)
 
           this.emit(MediaScanner.events.progress)
 
