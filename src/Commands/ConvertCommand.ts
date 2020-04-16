@@ -86,7 +86,7 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
 
     const scanned = await scanner.scan(args.path, args.minutes, args.reverse, (filename: string) => {
       if (args.filenames.length > 0) {
-        return args.filenames.some((name) => fs.basename(name).toLowerCase() === filename.toLowerCase())
+        return args.filenames.some((name) => fs.basename(filename).toLowerCase() === name.toLowerCase())
       }
 
       return true
