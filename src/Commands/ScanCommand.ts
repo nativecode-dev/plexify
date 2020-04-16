@@ -48,7 +48,7 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
 
     const results = await scanner.scan(args.path, args.minutes, args.reverse, (filename) => {
       if (args.filenames.length > 0) {
-        return args.filenames.includes(filename)
+        return args.filenames.some((name) => name.endsWith(filename))
       }
 
       return true
