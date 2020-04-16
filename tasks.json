@@ -2,12 +2,9 @@
   "tasks": {
     "build": [
       "[lint]",
-      "tsc --project tsconfig.json",
-      "ncc build bin/plexify.js --out dist",
-      "nexe --output dist/plexify --resource \"./bin/dist/locales/**/*\" --target linux-x64"
+      "tsc --project tsconfig.json"
     ],
     "lint": [
-      "jsonsort *.json",
       "prettier --loglevel silent --write \"src/**/*.ts\"",
       "tslint --project tsconfig.json --config tslint.json"
     ],

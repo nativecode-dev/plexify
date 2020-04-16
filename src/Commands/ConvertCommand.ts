@@ -68,7 +68,7 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
       bars.remove(scanbar)
     })
 
-    const scanned_results = await scanner.scan(args.path, args.minutes, args.reverse, (filename) =>
+    const scanned = await scanner.scan(args.path, args.minutes, args.reverse, (filename) =>
       args.filenames.some((name) => name.endsWith(filename)),
     )
 
@@ -84,7 +84,7 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
       )
     }
 
-    const files = args.filenames.length > 0 ? filter(scanned_results) : scanned_results
+    const files = args.filenames.length > 0 ? filter(scanned) : scanned
 
     let current = 0
 
@@ -94,34 +94,34 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
     filebar.start(files.length, current, payload)
 
     await Throttle(
-      files.map((stream_file) => async () => {
-        const conversion = bars.create(100, 0, { message: fs.basename(stream_file.filename) })
+      files.map((file) => async () => {
+        const conversion = bars.create(100, 0, { message: fs.basename(file.filename) })
         const converter = new MediaConverter()
 
-        const handle_progress = (progress: StreamProgress) => {
-          conversion.update(progress.percent, { message: fs.basename(stream_file.filename) })
+        const handleProgress = (progress: StreamProgress) => {
+          conversion.update(progress.percent, { message: fs.basename(file.filename) })
           filebar.update(current)
         }
 
-        const handle_start = () => conversion.start(100, 0, { message: stream_file.filename })
+        const handleStart = () => conversion.start(100, 0, { message: file.filename })
 
-        const handle_stop = () => {
+        const handleStop = () => {
           current++
           bars.remove(conversion)
         }
 
-        converter.on('start', handle_start)
-        converter.on('stop', handle_stop)
-        converter.on('progress', handle_progress)
+        converter.on('start', handleStart)
+        converter.on('stop', handleStop)
+        converter.on('progress', handleProgress)
 
         try {
-          await converter.convert(stream_file, args.rename, args.dryrun)
+          await converter.convert(file, args.rename, args.dryrun)
         } catch (error) {
           throw error
         } finally {
-          converter.off('progress', handle_progress)
-          converter.off('stop', handle_stop)
-          converter.off('start', handle_start)
+          converter.off('progress', handleProgress)
+          converter.off('stop', handleStop)
+          converter.off('start', handleStart)
         }
 
         filebar.increment(1)

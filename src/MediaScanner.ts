@@ -28,9 +28,9 @@ export class MediaScanner extends EventEmitter {
   private readonly globs: string[]
   private readonly media: MediaStore
 
-  constructor(allowed_extensions = MediaScanner.extensions, private readonly allowed_codecs = MediaScanner.codecs) {
+  constructor(allowedExtensions = MediaScanner.extensions, private readonly allowedCodecs = MediaScanner.codecs) {
     super()
-    this.globs = allowed_extensions.map((glob) => `**/*.${glob}`)
+    this.globs = allowedExtensions.map((glob) => `**/*.${glob}`)
     this.media = new MediaStore()
   }
 
@@ -40,26 +40,26 @@ export class MediaScanner extends EventEmitter {
     reverse: boolean = false,
     filter: MediaFileNameFilter = DefaultMediaFileNameFilter,
   ) {
-    const filenames_unsorted = await fs.globs(this.globs, path)
+    const unsorted = await fs.globs(this.globs, path)
 
-    const filenames_sorted = this.applySort(
-      filenames_unsorted.filter((filename) => filter(filename)),
+    const sorted = this.applySort(
+      unsorted.filter((filename) => filter(filename)),
       reverse,
     )
 
-    const filenames_filtered = await this.applyAgeFilter(filenames_sorted, minutes)
+    const filtered = await this.applyAgeFilter(sorted, minutes)
 
-    const total = filenames_filtered.length
+    const total = filtered.length
 
     this.emit(MediaScanner.events.start, total)
 
     const files = await Throttle(
-      filenames_filtered.map((filename) => {
+      filtered.map((filename) => {
         return async () => {
           const info = await getMediaInfo(filename)
           const audio = this.findAudioStream(info)
           const video = this.findVideoStream(info)
-          const stream_file: StreamFile = { data: info, filename, format: info.format, audio, video }
+          const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
 
           const id = fs.basename(filename)
 
@@ -77,7 +77,7 @@ export class MediaScanner extends EventEmitter {
           const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
 
           if (audioCodeDisallowed || videoCodecDisallowed) {
-            return stream_file
+            return stream
           }
 
           return null
@@ -122,17 +122,17 @@ export class MediaScanner extends EventEmitter {
 
   private codec_allowed(codec?: string): boolean {
     if (codec) {
-      return this.allowed_codecs.some((name) => codec === name)
+      return this.allowedCodecs.some((name) => codec === name)
     }
 
     return false
   }
 
   private findAudioStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type == 'audio').reduce((_, current) => current)
+    return data.streams.filter((stream) => stream.codec_type === 'audio').reduce((_, current) => current)
   }
 
   private findVideoStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type == 'video').reduce((_, current) => current)
+    return data.streams.filter((stream) => stream.codec_type === 'video').reduce((_, current) => current)
   }
 }

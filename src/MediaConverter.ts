@@ -1,14 +1,12 @@
-import os from 'os'
 import ffmpeg from 'fluent-ffmpeg'
 
 import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
 
+import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { MediaError } from './Errors/MediaError'
 import { StreamProgress } from './StreamProgress'
-import { MediaStore } from './MediaStore'
-import { MediaInfo } from './MediaInfo'
 
 interface Context {
   dryrun: boolean
@@ -50,19 +48,11 @@ export class MediaConverter extends EventEmitter {
       const dirname = fs.dirname(file.filename)
       const id = fs.basename(file.filename)
 
-      const document = await this.store.database.get<MediaInfo>(id)
-
-      if (document && document.locked && document.host !== os.hostname()) {
+      if (await this.store.locked(id)) {
         return
       }
 
-      await this.store.upsert({
-        _id: id,
-        filename: file.filename,
-        host: os.hostname(),
-        locked: true,
-        source: file.data,
-      })
+      await this.store.lock(id, file.filename, file.data)
 
       const context: Context = {
         dryrun,
@@ -101,13 +91,14 @@ export class MediaConverter extends EventEmitter {
         .on('stop', () => {
           this.emit(MediaConverter.events.stop)
         })
-        .on('end', () => {
-          this.complete(resolve, reject, context)
+        .on('end', async () => {
+          await this.complete(resolve, reject, context)
         })
         .on('progress', (progress: StreamProgress) => {
           this.emit(MediaConverter.events.progress, progress)
         })
-        .on('error', (error, stdout, stderr) => {
+        .on('error', async (error, stdout, stderr) => {
+          await this.store.unlock(id, context.file.filename, context.file.data)
           console.log(error, stderr)
           reject(new MediaError(stdout, stderr, error))
         })
@@ -137,13 +128,7 @@ export class MediaConverter extends EventEmitter {
 
       const id = fs.basename(context.filename.original)
 
-      await this.store.upsert({
-        _id: id,
-        filename: context.file.filename,
-        host: null,
-        locked: false,
-        source: context.file.data,
-      })
+      await this.store.unlock(id, context.file.filename, context.file.data)
 
       this.emit(MediaConverter.events.stop)
       resolve()
