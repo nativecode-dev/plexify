@@ -25,14 +25,17 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
       Presets.shades_classic,
     )
 
-    const scanbar = bars.create(0, 0, { message: 'scanner' })
-
+    const scanbar = bars.create(100, 0, { message: 'scanner' })
     const scanner = new MediaScanner()
 
-    scanner.on('progress', () => scanbar.increment(1))
+    scanner.on('progress', () => {
+      scanbar.increment(1)
+    })
+
     scanner.on('start', (total: number) => {
       scanbar.start(total, 0, { message: 'scanning' })
     })
+
     scanner.on('stop', () => {
       scanbar.stop()
       bars.remove(scanbar)

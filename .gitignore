@@ -21,4 +21,5 @@ node_modules
 
 !.gitkeep
 !.vscode/launch.json
+plexify/
 video_files/

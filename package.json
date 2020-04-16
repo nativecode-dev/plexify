@@ -29,7 +29,10 @@
     "fluent-ffmpeg": "^2.1.2",
     "moment": "^2.24.0",
     "moment-duration-format": "^2.3.2",
+    "pouchdb": "^7.2.1",
+    "pouchdb-upsert": "^2.2.0",
     "redis": "^3.0.2",
+    "uuid": "^7.0.3",
     "yargs": "^15.3.1"
   },
   "devDependencies": {
@@ -41,7 +44,10 @@
     "@types/mocha": "^7.0.2",
     "@types/moment-duration-format": "^2.2.2",
     "@types/node": "^13.11.1",
+    "@types/pouchdb": "^6.4.0",
+    "@types/pouchdb-upsert": "^2.2.6",
     "@types/redis": "^2.8.17",
+    "@types/uuid": "^7.0.2",
     "@types/yargs": "^15.0.4",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",

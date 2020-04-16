@@ -8,6 +8,8 @@ import { Throttle } from '@nnode/common'
 
 import { StreamFile } from './StreamFile'
 import { getMediaInfo } from './MediaFunctions'
+import { MediaStore } from './MediaStore'
+import { MediaInfo } from './MediaInfo'
 
 export class MediaScanner extends EventEmitter {
   static readonly codecs = ['aac', 'hevc']
@@ -20,10 +22,12 @@ export class MediaScanner extends EventEmitter {
   }
 
   private readonly globs: string[]
+  private readonly media: MediaStore
 
   constructor(allowed_extensions = MediaScanner.extensions, private readonly allowed_codecs = MediaScanner.codecs) {
     super()
     this.globs = allowed_extensions.map((glob) => `**/*.${glob}`)
+    this.media = new MediaStore()
   }
 
   async scan(path: string, minutes: number = 120, reverse: boolean = false) {
@@ -31,7 +35,7 @@ export class MediaScanner extends EventEmitter {
     const filenames_sorted = this.applySort(filenames_unsorted, reverse)
     const filenames_filtered = await this.applyAgeFilter(filenames_sorted, minutes)
 
-    const total = filenames_sorted.length
+    const total = filenames_filtered.length
 
     this.emit(MediaScanner.events.start, total)
 
@@ -43,6 +47,14 @@ export class MediaScanner extends EventEmitter {
           const video = this.findVideoStream(info)
           const format = info.format
           const stream_file = { filename, format, audio, video }
+
+          const id = fs.basename(filename)
+
+          await this.media.database.upsert<MediaInfo>(id, (mediainfo: MediaInfo) => {
+            mediainfo.filename = filename
+            mediainfo.source = info
+            return mediainfo
+          })
 
           this.emit(MediaScanner.events.progress)
 
