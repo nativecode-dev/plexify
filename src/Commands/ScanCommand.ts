@@ -6,9 +6,14 @@ import { MediaScanner } from '../MediaScanner'
 
 export class ScanCommand implements CommandModule<{}, ScanOptions> {
   aliases = ['scan']
-  command = 'scan <path> [minutes]'
+  command = 'scan <path> [filenames..]'
 
   builder: CommandBuilder<{}, ScanOptions> = {
+    minutes: {
+      alias: 'a',
+      default: 120,
+      type: 'number',
+    },
     reverse: {
       alias: 'r',
       default: false,
@@ -41,6 +46,12 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
       bars.remove(scanbar)
     })
 
-    await scanner.scan(args.path, args.minutes, true)
+    await scanner.scan(args.path, args.minutes, args.reverse, (filename) => {
+      if (args.filenames.length > 0) {
+        return args.filenames.includes(filename)
+      }
+
+      return true
+    })
   }
 }
