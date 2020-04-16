@@ -1,3 +1,4 @@
+import os from 'os'
 import moment from 'moment'
 
 import { FfprobeData, FfprobeStream } from 'fluent-ffmpeg'
@@ -6,10 +7,9 @@ import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
 import { Throttle } from '@nnode/common'
 
+import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { getMediaInfo } from './MediaFunctions'
-import { MediaStore } from './MediaStore'
-import { MediaInfo } from './MediaInfo'
 
 export class MediaScanner extends EventEmitter {
   static readonly codecs = ['aac', 'hevc']
@@ -45,20 +45,24 @@ export class MediaScanner extends EventEmitter {
           const info = await getMediaInfo(filename)
           const audio = this.findAudioStream(info)
           const video = this.findVideoStream(info)
-          const format = info.format
-          const stream_file = { filename, format, audio, video }
+          const stream_file: StreamFile = { data: info, filename, format: info.format, audio, video }
 
           const id = fs.basename(filename)
 
-          await this.media.database.upsert<MediaInfo>(id, (mediainfo: MediaInfo) => {
-            mediainfo.filename = filename
-            mediainfo.source = info
-            return mediainfo
+          await this.media.upsert({
+            _id: id,
+            filename,
+            host: null,
+            locked: false,
+            source: info,
           })
 
           this.emit(MediaScanner.events.progress)
 
-          if (this.codec_allowed(audio.codec_name) === false || this.codec_allowed(video.codec_name) === false) {
+          const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
+          const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
+
+          if (audioCodeDisallowed || videoCodecDisallowed) {
             return stream_file
           }
 
