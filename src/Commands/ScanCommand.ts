@@ -1,11 +1,10 @@
 import { fs } from '@nofrills/fs'
-import { MultiBar, Presets } from 'cli-progress'
 import { CommandModule, Arguments, CommandBuilder } from 'yargs'
 
 import { Logger } from '../Logger'
+import { BarManager } from '../BarManager'
 import { MediaScanner } from '../MediaScanner'
 import { ScanOptions } from '../Options/ScanOptions'
-import { createChildBar } from '../BarFunctions'
 
 export class ScanCommand implements CommandModule<{}, ScanOptions> {
   aliases = ['scan']
@@ -29,39 +28,30 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
   }
 
   async handler(args: Arguments<ScanOptions>) {
-    const bars = new MultiBar(
-      {
-        format: '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
-        stopOnComplete: true,
-      },
-      Presets.shades_classic,
-    )
-
-    const scanbar = createChildBar(bars)
+    const bars = new BarManager(args)
+    const scanbar = 'scanbar'
     const scanner = new MediaScanner(Logger)
 
-    if (args.disableBars === false) {
-      bars.remove(scanbar)
-    }
+    bars.createBar(scanbar)
 
     scanner.on('progress', () => {
       if (args.disableBars === false) {
-        scanbar.increment(1)
+        bars.incrementBar(scanbar, 1)
       }
     })
 
     scanner.on('start', (total: number) => {
       if (args.disableBars === false) {
-        scanbar.start(total, 0, { message: 'scanning' })
+        bars.startBar(scanbar, total, { message: 'scanning' })
       }
     })
 
     scanner.on('stop', () => {
       if (args.disableBars === false) {
-        scanbar.stop()
+        bars.stopBar(scanbar)
       }
 
-      bars.remove(scanbar)
+      bars.removeBar(scanbar)
     })
 
     const results = await scanner.scan(args.path, args.minutes, args.reverse, (filename) => {

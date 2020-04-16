@@ -2,15 +2,14 @@ import os from 'os'
 
 import { fs } from '@nofrills/fs'
 import { Throttle } from '@nnode/common'
-import { MultiBar, Presets } from 'cli-progress'
 import { CommandModule, Arguments, CommandBuilder } from 'yargs'
 
 import { Logger } from '../Logger'
+import { BarManager } from '../BarManager'
 import { MediaScanner } from '../MediaScanner'
 import { MediaConverter } from '../MediaConverter'
 import { StreamProgress } from '../StreamProgress'
 import { ConvertOptions } from '../Options/ConvertOptions'
-import { createChildBar } from '../BarFunctions'
 
 export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
   aliases = ['convert']
@@ -49,39 +48,31 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
   }
 
   async handler(args: Arguments<ConvertOptions>) {
-    const bars = new MultiBar(
-      {
-        format: '[{bar} {percentage}%] ETA: {eta_formatted} - {message}',
-        stopOnComplete: true,
-      },
-      Presets.shades_classic,
-    )
+    const bars = new BarManager(args)
 
-    const scanbar = createChildBar(bars)
+    const scanbar = 'scanner'
     const scanner = new MediaScanner(Logger)
 
-    if (args.disableBars === false) {
-      bars.remove(scanbar)
-    }
+    bars.createBar(scanbar)
 
     scanner.on('progress', () => {
       if (args.disableBars === false) {
-        scanbar.increment(1)
+        bars.incrementBar(scanbar)
       }
     })
 
     scanner.on('start', (total: number) => {
       if (args.disableBars === false) {
-        scanbar.start(total, 0, { message: 'scanning' })
+        bars.startBar(scanbar, total, { message: 'scanning' })
       }
     })
 
     scanner.on('stop', () => {
       if (args.disableBars === false) {
-        scanbar.stop()
+        bars.stopBar(scanbar)
       }
 
-      bars.remove(scanbar)
+      bars.removeBar(scanbar)
     })
 
     const scanned = await scanner.scan(args.path, args.minutes, args.reverse, (filename: string) => {
@@ -92,28 +83,27 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
       return true
     })
 
-    let current = 0
-
+    const filebar = 'filebar'
     const payload = { message: args.path }
-    const filebar = bars.create(scanned.length, current, payload)
 
-    filebar.start(scanned.length, current, payload)
+    bars.createBar(filebar)
+    bars.startBar(filebar, scanned.length, payload)
 
     await Throttle(
       scanned.map((file) => async () => {
-        const conversion = bars.create(100, 0, { message: fs.basename(file.filename) })
+        const id = fs.basename(file.filename)
         const converter = new MediaConverter(Logger)
 
+        bars.createBar(id)
+
         const handleProgress = (progress: StreamProgress) => {
-          conversion.update(progress.percent, { message: fs.basename(file.filename) })
-          filebar.update(current)
+          bars.updateBar(id, progress.percent, { message: fs.basename(file.filename) })
         }
 
-        const handleStart = () => conversion.start(100, 0, { message: file.filename })
+        const handleStart = () => bars.startBar(id, 100, { message: file.filename })
 
         const handleStop = () => {
-          current++
-          bars.remove(conversion)
+          bars.removeBar(id)
         }
 
         converter.on('start', handleStart)
@@ -130,11 +120,11 @@ export class ConvertCommand implements CommandModule<{}, ConvertOptions> {
           converter.off('start', handleStart)
         }
 
-        filebar.increment(1)
+        bars.incrementBar(filebar, 1)
       }),
       args.processors,
     )
 
-    filebar.stop()
+    bars.stopBar(filebar)
   }
 }
