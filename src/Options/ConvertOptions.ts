@@ -1,6 +1,6 @@
-import { PlexifyOptions } from './PlexifyOptions'
+import { ScanOptions } from './ScanOptions'
 
-export interface ConvertOptions extends PlexifyOptions {
+export interface ConvertOptions extends ScanOptions {
   dryrun: boolean
   filenames: string[]
   minutes: number

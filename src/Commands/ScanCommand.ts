@@ -1,12 +1,10 @@
-import { fs } from '@nofrills/fs'
-import { CommandModule, Arguments, CommandBuilder } from 'yargs'
+import { Arguments, CommandBuilder } from 'yargs'
 
-import { Logger } from '../Logger'
 import { BarManager } from '../BarManager'
-import { MediaScanner } from '../MediaScanner'
+import { BaseCommand } from './BaseCommand'
 import { ScanOptions } from '../Options/ScanOptions'
 
-export class ScanCommand implements CommandModule<{}, ScanOptions> {
+export class ScanCommand extends BaseCommand<ScanOptions> {
   aliases = ['scan']
   command = 'scan <path> [filenames..]'
 
@@ -27,33 +25,12 @@ export class ScanCommand implements CommandModule<{}, ScanOptions> {
     },
   }
 
-  async handler(args: Arguments<ScanOptions>) {
+  handler = async (args: Arguments<ScanOptions>) => {
     const bars = new BarManager(args)
-    const scanbar = 'scanbar'
-    const scanner = new MediaScanner(Logger)
+    const results = await this.scan(args, bars)
 
-    scanner.on('progress', () => {
-      bars.incrementBar(scanbar)
-    })
-
-    scanner.on('start', (total: number) => {
-      bars.createBar(scanbar)
-      bars.startBar(scanbar, total, { message: 'scanning' })
-    })
-
-    scanner.on('stop', () => {
-      bars.stopBar(scanbar)
-      bars.removeBar(scanbar)
-    })
-
-    const results = await scanner.scan(args.path, args.minutes, args.reverse, (filename) => {
-      if (args.filenames.length > 0) {
-        return args.filenames.some((name) => fs.basename(filename).toLowerCase() === name.toLowerCase())
-      }
-
-      return true
-    })
-
-    console.log(JSON.stringify(results))
+    if (args.disableBars) {
+      console.log(JSON.stringify(results))
+    }
   }
 }
