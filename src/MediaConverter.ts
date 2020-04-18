@@ -133,6 +133,7 @@ export class MediaConverter extends EventEmitter {
       this.emit(MediaConverter.events.stop)
       resolve()
     } catch (error) {
+      this.log.error(error)
       reject(error)
     }
   }
