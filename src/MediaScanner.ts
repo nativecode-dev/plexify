@@ -43,7 +43,7 @@ export class MediaScanner extends EventEmitter {
 
   async scan(
     path: string,
-    minutes: number = 120,
+    minutes: number = 0,
     reverse: boolean = false,
     filter: MediaFileNameFilter = DefaultMediaFileNameFilter,
   ) {
@@ -82,7 +82,7 @@ export class MediaScanner extends EventEmitter {
             const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
             const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
 
-            this.emit(MediaScanner.events.progress)
+            this.emit(MediaScanner.events.progress, filename)
 
             if (audioCodeDisallowed || videoCodecDisallowed) {
               if (await this.media.locked(id)) {

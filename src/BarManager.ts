@@ -25,17 +25,17 @@ export class BarManager {
     )
   }
 
-  createBar(name: string) {
+  createBar(name: string, payload: any = {}) {
     if (this.options.disableBars) {
       return
     }
 
     this.initialize()
-    const bar = this.multibar.create(100, 0, {})
+    const bar = this.multibar.create(100, 0, payload)
     this.bars.set(name, bar)
   }
 
-  incrementBar(name: string, value: number = 1) {
+  incrementBar(name: string, value: number = 1, payload: any = {}) {
     if (this.options.disableBars) {
       return
     }
@@ -44,7 +44,7 @@ export class BarManager {
     const bar = this.bars.get(name)
 
     if (bar) {
-      bar.increment(value)
+      bar.increment(value, payload)
     }
   }
 

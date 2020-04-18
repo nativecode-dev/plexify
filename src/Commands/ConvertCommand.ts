@@ -17,7 +17,7 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
     },
     minutes: {
       alias: 'a',
-      default: 120,
+      default: 0,
       type: 'number',
     },
     reverse: {

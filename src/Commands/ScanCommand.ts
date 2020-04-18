@@ -15,7 +15,7 @@ export class ScanCommand extends BaseCommand<ScanOptions> {
     },
     minutes: {
       alias: 'a',
-      default: 120,
+      default: 0,
       type: 'number',
     },
     reverse: {

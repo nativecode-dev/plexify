@@ -1,4 +1,5 @@
 import { fs } from '@nofrills/fs'
+import { Lincoln } from '@nnode/lincoln'
 import { Throttle } from '@nnode/common'
 import { CommandModule, CommandBuilder, Arguments } from 'yargs'
 
@@ -13,6 +14,8 @@ import { PlexifyOptions } from '../Options/PlexifyOptions'
 import { ConvertOptions } from '../Options/ConvertOptions'
 
 export abstract class BaseCommand<T extends PlexifyOptions> implements CommandModule<{}, T> {
+  protected log: Lincoln = Logger.extend('command')
+
   abstract aliases: string[]
   abstract command: string
   abstract builder: CommandBuilder<{}, T>
@@ -21,27 +24,33 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
   protected async scan(args: ScanOptions, bars: BarManager) {
     const scanbar = 'scanner'
     const scanner = new MediaScanner(Logger)
+    const payload = { message: 'scanning' }
 
-    const handleProgress = () => {
-      bars.incrementBar(scanbar)
+    const handleProgress = (filename: string) => {
+      bars.incrementBar(scanbar, 1, { message: filename })
     }
 
     const handleStart = (total: number) => {
-      bars.startBar(scanbar, total, { message: 'scanning' })
+      bars.createBar(scanbar, payload)
+      bars.startBar(scanbar, total, payload)
     }
 
     const handleStop = () => {
       bars.stopBar(scanbar)
     }
 
-    bars.createBar(scanbar)
     scanner.on('progress', handleProgress)
     scanner.on('start', handleStart)
     scanner.on('stop', handleStop)
 
     const results = await scanner.scan(args.path, args.minutes, args.reverse, (filename: string) => {
       if (args.filenames.length > 0) {
-        return args.filenames.some((name) => fs.basename(filename).toLowerCase() === name.toLowerCase())
+        return args.filenames.some((name) => {
+          const basename = fs.basename(filename).toLowerCase()
+          const selected = name.toLowerCase()
+          this.log.trace(basename, selected)
+          return basename === selected
+        })
       }
 
       return true
@@ -58,7 +67,7 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
     const filebar = 'filebar'
     const payload = { message: args.path }
 
-    bars.createBar(filebar)
+    bars.createBar(filebar, payload)
     bars.startBar(filebar, scanned.length, payload)
 
     await Throttle(

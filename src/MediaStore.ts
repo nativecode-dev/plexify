@@ -15,18 +15,24 @@ export class MediaStore {
   private readonly log: Lincoln
 
   constructor(logger: Lincoln) {
-    this.database = new PouchDB('http://couchdb.in.nativecode.com', {
+    this.database = new PouchDB('http://couchdb.in.nativecode.com:5984/plexify', {
+      adapter: 'http',
       auth: {
         password: '2bpi9AN0o1Q5ZcLs',
         username: 'admin',
       },
+      name: 'http://couchdb.in.nativecode.com:5984/plexify',
     })
     this.log = logger.extend('storage')
   }
 
   async exists(id: string) {
-    const document = await this.database.get<MediaInfo>(id)
-    return document._id === id
+    try {
+      const document = await this.database.get<MediaInfo>(id)
+      return document._id === id
+    } catch {
+      return false
+    }
   }
 
   lock(id: string, filename: string, source: FfprobeData) {
@@ -35,8 +41,12 @@ export class MediaStore {
   }
 
   async locked(id: string) {
-    const document = await this.database.get<MediaInfo>(id)
-    return document.locked === true && document.host !== os.hostname()
+    try {
+      const document = await this.database.get<MediaInfo>(id)
+      return document.locked === true && document.host !== os.hostname()
+    } catch {
+      return false
+    }
   }
 
   unlock(id: string, filename: string, source: FfprobeData) {
