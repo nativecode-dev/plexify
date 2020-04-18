@@ -6,7 +6,6 @@ export interface ConvertOptions extends ScanOptions {
   minutes: number
   path: string
   processors: number
-  rename: boolean
   reverse: boolean
   skipScan: boolean
 }

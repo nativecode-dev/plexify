@@ -25,10 +25,6 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       default: false,
       type: 'boolean',
     },
-    dryrun: {
-      default: false,
-      type: 'boolean',
-    },
     processors: {
       alias: 'p',
       default: os.cpus().length,

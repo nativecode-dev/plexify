@@ -93,7 +93,7 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
         converter.on('progress', handleProgress)
 
         try {
-          await converter.convert(file, args.rename, args.dryrun)
+          await converter.convert(file, args.dryrun)
         } catch (error) {
           throw error
         } finally {

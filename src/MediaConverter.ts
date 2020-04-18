@@ -11,7 +11,6 @@ import { Lincoln } from '@nnode/lincoln'
 
 interface Context {
   dryrun: boolean
-  rename: boolean
   file: StreamFile
   filename: {
     converted: string
@@ -46,7 +45,7 @@ export class MediaConverter extends EventEmitter {
     this.store = new MediaStore(logger)
   }
 
-  convert(file: StreamFile, rename: boolean = false, dryrun: boolean = true): Promise<void> {
+  convert(file: StreamFile, dryrun: boolean = true): Promise<void> {
     return new Promise(async (resolve, reject) => {
       const basename = fs.basename(file.filename, false)
       const dirname = fs.dirname(file.filename)
@@ -60,7 +59,6 @@ export class MediaConverter extends EventEmitter {
 
       const context: Context = {
         dryrun,
-        rename,
         file,
         filename: {
           converted: fs.join(dirname, `${basename}.mp4`),
@@ -108,25 +106,19 @@ export class MediaConverter extends EventEmitter {
     try {
       this.log.trace('completed', context.filename.original, context.filename.processing, context.filename.converted)
 
-      if (context.rename) {
+      if (context.dryrun === false) {
         if (context.filename.extension.original !== '.mp4') {
-          if (context.dryrun === false) {
-            await fs.delete(context.file.filename)
-            this.log.trace('delete', fs.basename(context.file.filename))
-          }
+          await fs.delete(context.file.filename)
+          this.log.trace('delete', fs.basename(context.file.filename))
         }
 
         if (await fs.exists(context.filename.converted)) {
-          if (context.dryrun === false) {
-            await fs.delete(context.filename.converted)
-            this.log.trace('delete', fs.basename(context.filename.converted))
-          }
+          await fs.delete(context.filename.converted)
+          this.log.trace('delete', fs.basename(context.filename.converted))
         }
 
-        if (context.dryrun === false) {
-          await fs.rename(context.filename.processing, context.filename.converted)
-          this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
-        }
+        await fs.rename(context.filename.processing, context.filename.converted)
+        this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
       const id = fs.basename(context.filename.original)
