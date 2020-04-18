@@ -35,11 +35,20 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       default: os.cpus().length,
       type: 'number',
     },
+    'skip-scan': {
+      default: false,
+      type: 'boolean',
+    },
   }
 
   handler = async (args: Arguments<ConvertOptions>) => {
     const bars = new BarManager(args)
-    const scanned = await this.scan(args, bars)
-    await this.transcode(args, bars, scanned)
+
+    if (args.skipScan) {
+      // Get all documents
+    } else {
+      const scanned = await this.scan(args, bars)
+      await this.transcode(args, bars, scanned)
+    }
   }
 }

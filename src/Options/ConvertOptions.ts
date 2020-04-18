@@ -8,4 +8,5 @@ export interface ConvertOptions extends ScanOptions {
   processors: number
   rename: boolean
   reverse: boolean
+  skipScan: boolean
 }
