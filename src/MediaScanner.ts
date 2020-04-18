@@ -67,7 +67,7 @@ export class MediaScanner extends EventEmitter {
     this.emit(MediaScanner.events.start, total)
 
     const files = await Throttle(
-      filtered.map((filename) => {
+      filtered.map((filename, index) => {
         return async () => {
           try {
             const id = fs.basename(filename)
@@ -85,10 +85,10 @@ export class MediaScanner extends EventEmitter {
             }
 
             const locked = await this.media.locked(id)
-            this.log.trace(id, 'locked', locked)
+            this.log.trace(id, 'lock-status', locked, 'progress', index, total)
 
             if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
-              this.log.trace(id, 'disallow')
+              this.log.trace(id, 'convertible')
               return stream
             }
 
