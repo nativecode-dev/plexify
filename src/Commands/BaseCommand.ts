@@ -72,7 +72,7 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
 
     await Throttle(
       scanned.map((file) => async () => {
-        const id = fs.basename(file.filename)
+        const id = fs.basename(file.filename, false)
         const converter = new MediaConverter(Logger)
 
         const handleProgress = (progress: StreamProgress) => {

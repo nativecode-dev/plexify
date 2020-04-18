@@ -66,7 +66,7 @@ export class MediaScanner extends EventEmitter {
       filtered.map((filename, index) => {
         return async () => {
           try {
-            const id = fs.basename(filename)
+            const id = fs.basename(filename, false)
 
             if (await this.media.exists(id)) {
               const document = await this.media.get(id)
@@ -92,7 +92,7 @@ export class MediaScanner extends EventEmitter {
   }
 
   private async convertible(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
-    const id = fs.basename(info.filename)
+    const id = fs.basename(info.filename, false)
 
     const audio = this.findAudioStream(info.source)
     const video = this.findVideoStream(info.source)

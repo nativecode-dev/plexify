@@ -35,7 +35,7 @@ export class MediaConverter extends EventEmitter {
     return new Promise(async (resolve, reject) => {
       const basename = fs.basename(file.filename, false)
       const dirname = fs.dirname(file.filename)
-      const id = fs.basename(file.filename)
+      const id = fs.basename(file.filename, false)
 
       if (await this.store.locked(id)) {
         return
@@ -107,7 +107,7 @@ export class MediaConverter extends EventEmitter {
         this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
-      const id = fs.basename(context.filename.original)
+      const id = fs.basename(context.filename.original, false)
       await this.store.unlock(id, context.file.filename, context.file.data)
 
       this.emit(MediaConverter.events.stop)
