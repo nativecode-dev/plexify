@@ -88,7 +88,7 @@ export class MediaScanner extends EventEmitter {
             this.log.trace(id, 'lock-status', locked, 'progress', index, total)
 
             if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
-              this.log.trace(id, 'convertible')
+              this.log.debug(id, 'convertible')
               return stream
             }
 

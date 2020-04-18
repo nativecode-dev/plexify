@@ -15,6 +15,10 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       default: false,
       type: 'boolean',
     },
+    dryrun: {
+      default: false,
+      type: 'boolean',
+    },
     minutes: {
       alias: 'a',
       default: 0,
