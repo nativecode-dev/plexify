@@ -32,7 +32,6 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
 
     const handleStop = () => {
       bars.stopBar(scanbar)
-      bars.removeBar(scanbar)
     }
 
     bars.createBar(scanbar)
@@ -78,7 +77,6 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
 
         const handleStop = () => {
           bars.stopBar(id)
-          bars.removeBar(id)
         }
 
         converter.on('start', handleStart)

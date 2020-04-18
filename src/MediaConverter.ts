@@ -43,7 +43,7 @@ export class MediaConverter extends EventEmitter {
   ) {
     super()
     this.log = logger.extend('converter')
-    this.store = new MediaStore()
+    this.store = new MediaStore(logger)
   }
 
   convert(file: StreamFile, rename: boolean = false, dryrun: boolean = true): Promise<void> {
@@ -103,7 +103,9 @@ export class MediaConverter extends EventEmitter {
         })
         .on('error', async (error, stdout, stderr) => {
           await this.store.unlock(id, context.file.filename, context.file.data)
-          console.log(error, stderr)
+          this.log.error(error)
+          this.log.trace(stdout)
+          this.log.trace(stderr)
           reject(new MediaError(stdout, stderr, error))
         })
         .run()
@@ -116,22 +118,24 @@ export class MediaConverter extends EventEmitter {
         if (context.filename.extension.original !== '.mp4') {
           if (context.dryrun === false) {
             await fs.delete(context.file.filename)
+            this.log.trace('delete', fs.basename(context.file.filename))
           }
         }
 
         if (await fs.exists(context.filename.converted)) {
           if (context.dryrun === false) {
             await fs.delete(context.filename.converted)
+            this.log.trace('delete', fs.basename(context.filename.converted))
           }
         }
 
         if (context.dryrun === false) {
           await fs.rename(context.filename.processing, context.filename.converted)
+          this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
         }
       }
 
       const id = fs.basename(context.filename.original)
-
       await this.store.unlock(id, context.file.filename, context.file.data)
 
       this.emit(MediaConverter.events.stop)

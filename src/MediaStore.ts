@@ -2,19 +2,30 @@ import os from 'os'
 import PouchDB from 'pouchdb'
 import Upsert from 'pouchdb-upsert'
 
-import { MediaInfo } from './MediaInfo'
+import { Lincoln } from '@nnode/lincoln'
 import { FfprobeData } from 'fluent-ffmpeg'
+
+import { MediaInfo } from './MediaInfo'
 
 PouchDB.plugin(Upsert)
 
 export class MediaStore {
   readonly database: PouchDB.Database
 
-  constructor() {
+  private readonly log: Lincoln
+
+  constructor(logger: Lincoln) {
     this.database = new PouchDB('plexify')
+    this.log = logger.extend('storage')
+  }
+
+  async exists(id: string) {
+    const document = await this.database.get<MediaInfo>(id)
+    return document._id === id
   }
 
   lock(id: string, filename: string, source: FfprobeData) {
+    this.log.trace('locked', id, filename)
     return this.upsert(id, filename, source, true, os.hostname())
   }
 
@@ -24,6 +35,7 @@ export class MediaStore {
   }
 
   unlock(id: string, filename: string, source: FfprobeData) {
+    this.log.trace('unlocked', id, filename)
     return this.upsert(id, filename, source, false, null)
   }
 

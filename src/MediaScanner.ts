@@ -38,7 +38,7 @@ export class MediaScanner extends EventEmitter {
     super()
     this.globs = allowedExtensions.map((glob) => `**/*.${glob}`)
     this.log = logger.extend('scanner')
-    this.media = new MediaStore()
+    this.media = new MediaStore(logger)
   }
 
   async scan(
@@ -80,16 +80,20 @@ export class MediaScanner extends EventEmitter {
 
           const id = fs.basename(filename)
 
-          await this.media.upsert(id, filename, info)
-
           this.emit(MediaScanner.events.progress)
 
           const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
           const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
 
           if (audioCodeDisallowed || videoCodecDisallowed) {
+            if (await this.media.locked(id)) {
+              return null
+            }
+
             return stream
           }
+
+          await this.media.upsert(id, filename, info)
 
           return null
         }
