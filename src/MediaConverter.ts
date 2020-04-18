@@ -8,21 +8,7 @@ import { StreamFile } from './StreamFile'
 import { MediaError } from './Errors/MediaError'
 import { StreamProgress } from './StreamProgress'
 import { Lincoln } from '@nnode/lincoln'
-
-interface Context {
-  dryrun: boolean
-  file: StreamFile
-  filename: {
-    converted: string
-    original: string
-    processing: string
-
-    extension: {
-      converted: string
-      original: string
-    }
-  }
-}
+import { FileContext } from './FileContext'
 
 export class MediaConverter extends EventEmitter {
   static readonly events = {
@@ -57,7 +43,7 @@ export class MediaConverter extends EventEmitter {
 
       await this.store.lock(id, file.filename, file.data)
 
-      const context: Context = {
+      const context: FileContext = {
         dryrun,
         file,
         filename: {
@@ -102,7 +88,7 @@ export class MediaConverter extends EventEmitter {
     })
   }
 
-  private async complete(resolve: Function, reject: Function, context: Context): Promise<void> {
+  private async complete(resolve: Function, reject: Function, context: FileContext): Promise<void> {
     try {
       this.log.trace('completed', context.filename.original, context.filename.processing, context.filename.converted)
 
