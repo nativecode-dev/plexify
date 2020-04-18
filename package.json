@@ -15,6 +15,7 @@
   "scripts": {
     "build": "cli-tasks build",
     "cli": "ts-node --files --pretty src/plexify.ts",
+    "plexify": "ts-node src/index",
     "watch": "cli-tasks watch"
   },
   "husky": {
