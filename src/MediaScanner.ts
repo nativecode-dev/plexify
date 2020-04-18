@@ -83,7 +83,10 @@ export class MediaScanner extends EventEmitter {
             const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
 
             this.emit(MediaScanner.events.progress, filename)
-            await this.media.upsert(id, filename, info)
+
+            if ((await this.media.exists(id)) === false) {
+              await this.media.upsert(id, filename, info)
+            }
 
             if (audioCodeDisallowed || videoCodecDisallowed) {
               if (await this.media.locked(id)) {
