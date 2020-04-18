@@ -26,7 +26,6 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       type: 'boolean',
     },
     dryrun: {
-      alias: 'd',
       default: false,
       type: 'boolean',
     },

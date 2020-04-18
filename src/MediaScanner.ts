@@ -1,4 +1,3 @@
-import os from 'os'
 import moment from 'moment'
 
 import { FfprobeData, FfprobeStream } from 'fluent-ffmpeg'
@@ -50,11 +49,9 @@ export class MediaScanner extends EventEmitter {
     this.log.info('scan', 'gathering globs')
 
     const unsorted = await fs.globs(this.globs, path)
-
     this.log.trace('scan', 'unsorted', unsorted.length)
 
     const sorted = this.applySort(unsorted, reverse)
-
     this.log.trace('scan', 'sorted', sorted.length, reverse)
 
     const filtered = await this.applyAgeFilter(
@@ -65,7 +62,6 @@ export class MediaScanner extends EventEmitter {
     this.log.trace('scan', 'filtered', filtered.length)
 
     const total = filtered.length
-
     this.log.trace('scan', 'total', total)
 
     this.emit(MediaScanner.events.start, total)
@@ -89,8 +85,10 @@ export class MediaScanner extends EventEmitter {
             }
 
             const locked = await this.media.locked(id)
+            this.log.trace(id, 'locked', locked)
 
-            if (audioCodeDisallowed || videoCodecDisallowed || locked === false) {
+            if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
+              this.log.trace(id, 'disallow')
               return stream
             }
 

@@ -106,6 +106,8 @@ export class MediaConverter extends EventEmitter {
 
   private async complete(resolve: Function, reject: Function, context: Context): Promise<void> {
     try {
+      this.log.trace('completed', context.filename.original, context.filename.processing, context.filename.converted)
+
       if (context.rename) {
         if (context.filename.extension.original !== '.mp4') {
           if (context.dryrun === false) {
