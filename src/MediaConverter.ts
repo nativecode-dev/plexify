@@ -102,10 +102,10 @@ export class MediaConverter extends EventEmitter {
           this.emit(MediaConverter.events.progress, progress)
         })
         .on('error', async (error, stdout, stderr) => {
-          await this.store.unlock(id, context.file.filename, context.file.data)
           this.log.error(error)
           this.log.trace(stdout)
           this.log.trace(stderr)
+          await this.store.unlock(id, context.file.filename, context.file.data)
           reject(new MediaError(stdout, stderr, error))
         })
         .run()

@@ -73,27 +73,29 @@ export class MediaScanner extends EventEmitter {
     const files = await Throttle(
       filtered.map((filename) => {
         return async () => {
-          const info = await getMediaInfo(filename)
-          const audio = this.findAudioStream(info)
-          const video = this.findVideoStream(info)
-          const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
+          try {
+            const id = fs.basename(filename)
+            const info = await getMediaInfo(filename)
+            const audio = this.findAudioStream(info)
+            const video = this.findVideoStream(info)
+            const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
+            const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
+            const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
 
-          const id = fs.basename(filename)
+            this.emit(MediaScanner.events.progress)
 
-          this.emit(MediaScanner.events.progress)
+            if (audioCodeDisallowed || videoCodecDisallowed) {
+              if (await this.media.locked(id)) {
+                return null
+              }
 
-          const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
-          const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
-
-          if (audioCodeDisallowed || videoCodecDisallowed) {
-            if (await this.media.locked(id)) {
-              return null
+              return stream
             }
 
-            return stream
+            await this.media.upsert(id, filename, info)
+          } catch (error) {
+            this.log.error(error)
           }
-
-          await this.media.upsert(id, filename, info)
 
           return null
         }

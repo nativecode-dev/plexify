@@ -15,7 +15,12 @@ export class MediaStore {
   private readonly log: Lincoln
 
   constructor(logger: Lincoln) {
-    this.database = new PouchDB('plexify')
+    this.database = new PouchDB('http://couchdb.in.nativecode.com', {
+      auth: {
+        password: '2bpi9AN0o1Q5ZcLs',
+        username: 'admin',
+      },
+    })
     this.log = logger.extend('storage')
   }
 
