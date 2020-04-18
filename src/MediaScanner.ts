@@ -10,10 +10,11 @@ import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { getMediaInfo } from './MediaFunctions'
 import { Lincoln } from '@nnode/lincoln'
+import { MediaInfo } from './MediaInfo'
 
 export type MediaFileNameFilter = (filename: string) => boolean
 
-const DefaultMediaFileNameFilter = () => true
+const DefaultFilter = () => true
 
 export class MediaScanner extends EventEmitter {
   static readonly codecs = ['aac', 'hevc']
@@ -40,12 +41,7 @@ export class MediaScanner extends EventEmitter {
     this.media = new MediaStore(logger)
   }
 
-  async scan(
-    path: string,
-    minutes: number = 0,
-    reverse: boolean = false,
-    filter: MediaFileNameFilter = DefaultMediaFileNameFilter,
-  ) {
+  async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
     this.log.info('scan', 'gathering globs')
 
     const unsorted = await fs.globs(this.globs, path)
@@ -71,28 +67,16 @@ export class MediaScanner extends EventEmitter {
         return async () => {
           try {
             const id = fs.basename(filename)
+
+            if (await this.media.exists(id)) {
+              const document = await this.media.get(id)
+              return this.convertible(document, index, total)
+            }
+
             const info = await getMediaInfo(filename)
-            const audio = this.findAudioStream(info)
-            const video = this.findVideoStream(info)
-            const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
-            const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
-            const stream: StreamFile = { data: info, filename, format: info.format, audio, video }
-
-            this.emit(MediaScanner.events.progress, filename)
-
-            if ((await this.media.exists(id)) === false) {
-              await this.media.upsert(id, filename, info)
-            }
-
-            const locked = await this.media.locked(id)
-            this.log.trace(id, 'lock-status', locked, 'progress', index, total)
-
-            if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
-              this.log.debug(id, 'convertible')
-              return stream
-            }
-
-            return null
+            const document: MediaInfo = { _id: id, filename, host: null, locked: false, source: info }
+            await this.media.upsert(id, filename, info)
+            return this.convertible(document, index, total)
           } catch (error) {
             this.log.error(error)
           }
@@ -105,6 +89,36 @@ export class MediaScanner extends EventEmitter {
     this.emit(MediaScanner.events.stop)
 
     return files.reduce<StreamFile[]>((results, file) => (file !== null ? [...results, file] : results), [])
+  }
+
+  private async convertible(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
+    const id = fs.basename(info.filename)
+
+    const audio = this.findAudioStream(info.source)
+    const video = this.findVideoStream(info.source)
+
+    const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
+    const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
+
+    const locked = await this.media.locked(id)
+    this.log.trace(id, 'lock-status', locked, 'progress', index, total)
+    this.emit(MediaScanner.events.progress, info.filename, locked)
+
+    if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
+      this.log.debug(id, 'convertible')
+
+      const streamFile: StreamFile = {
+        audio,
+        video,
+        data: info.source,
+        filename: info.filename,
+        format: info.source.format,
+      }
+
+      return streamFile
+    }
+
+    return null
   }
 
   private applyAgeFilter(files: string[], minutes: number): Promise<string[]> {

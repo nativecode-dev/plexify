@@ -35,6 +35,10 @@ export class MediaStore {
     }
   }
 
+  get (id: string) {
+    return this.database.get<MediaInfo>(id)
+  }
+
   lock(id: string, filename: string, source: FfprobeData) {
     this.log.trace('locked', id, filename)
     return this.upsert(id, filename, source, true, os.hostname())
