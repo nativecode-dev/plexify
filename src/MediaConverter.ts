@@ -89,18 +89,10 @@ export class MediaConverter extends EventEmitter {
         .outputFormat(this.format)
         .withAudioCodec(this.audioCodec)
         .withVideoCodec(this.videoCodec)
-        .on('start', () => {
-          this.emit(MediaConverter.events.start, file.filename, context.filename.converted)
-        })
-        .on('stop', () => {
-          this.emit(MediaConverter.events.stop)
-        })
-        .on('end', async () => {
-          await this.complete(resolve, reject, context)
-        })
-        .on('progress', (progress: StreamProgress) => {
-          this.emit(MediaConverter.events.progress, progress)
-        })
+        .on('start', () => this.emit(MediaConverter.events.start, file.filename, context.filename.converted))
+        .on('stop', () => this.emit(MediaConverter.events.stop))
+        .on('end', () => this.complete(resolve, reject, context))
+        .on('progress', (progress: StreamProgress) => this.emit(MediaConverter.events.progress, progress))
         .on('error', async (error, stdout, stderr) => {
           this.log.error(error)
           this.log.trace(stdout)
