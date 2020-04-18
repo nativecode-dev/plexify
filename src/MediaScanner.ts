@@ -70,13 +70,13 @@ export class MediaScanner extends EventEmitter {
 
             if (await this.media.exists(id)) {
               const document = await this.media.get(id)
-              return this.convertible(document, index, total)
+              return this.convertible(filename, document, index, total)
             }
 
             const info = await getMediaInfo(filename)
-            const document: MediaInfo = { _id: id, filename, host: null, locked: false, source: info }
-            await this.media.upsert(id, filename, info)
-            return this.convertible(document, index, total)
+            const document: MediaInfo = { _id: id, host: null, locked: false, source: info }
+            await this.media.upsert(id, info)
+            return this.convertible(filename, document, index, total)
           } catch (error) {
             this.log.error(error)
           }
@@ -91,8 +91,13 @@ export class MediaScanner extends EventEmitter {
     return files.reduce<StreamFile[]>((results, file) => (file !== null ? [...results, file] : results), [])
   }
 
-  private async convertible(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
-    const id = fs.basename(info.filename, false)
+  private async convertible(
+    filename: string,
+    info: MediaInfo,
+    index: number,
+    total: number,
+  ): Promise<StreamFile | null> {
+    const id = fs.basename(filename, false)
 
     const audio = this.findAudioStream(info.source)
     const video = this.findVideoStream(info.source)
@@ -102,7 +107,7 @@ export class MediaScanner extends EventEmitter {
 
     const locked = await this.media.locked(id)
     this.log.trace(id, 'lock-status', locked, 'progress', index, total)
-    this.emit(MediaScanner.events.progress, info.filename, locked)
+    this.emit(MediaScanner.events.progress, filename, locked)
 
     if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
       this.log.debug(id, 'convertible')
@@ -110,8 +115,8 @@ export class MediaScanner extends EventEmitter {
       const streamFile: StreamFile = {
         audio,
         video,
+        filename,
         data: info.source,
-        filename: info.filename,
         format: info.source.format,
       }
 

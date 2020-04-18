@@ -41,7 +41,7 @@ export class MediaConverter extends EventEmitter {
         return
       }
 
-      await this.store.lock(id, file.filename, file.data)
+      await this.store.lock(id, file.data)
 
       const context: FileContext = {
         dryrun,
@@ -81,7 +81,7 @@ export class MediaConverter extends EventEmitter {
           this.log.error(error)
           this.log.trace(stdout)
           this.log.trace(stderr)
-          await this.store.unlock(id, context.file.filename, context.file.data)
+          await this.store.unlock(id, context.file.data)
           reject(new MediaError(stdout, stderr, error))
         })
         .run()
@@ -108,7 +108,7 @@ export class MediaConverter extends EventEmitter {
       }
 
       const id = fs.basename(context.filename.original, false)
-      await this.store.unlock(id, context.file.filename, context.file.data)
+      await this.store.unlock(id, context.file.data)
 
       this.emit(MediaConverter.events.stop)
       resolve()
