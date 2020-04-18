@@ -93,6 +93,8 @@ export class MediaScanner extends EventEmitter {
             }
 
             await this.media.upsert(id, filename, info)
+
+            return null
           } catch (error) {
             this.log.error(error)
           }
