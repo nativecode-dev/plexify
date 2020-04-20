@@ -6,6 +6,7 @@ export interface ConvertOptions extends ScanOptions {
   filenames: string[]
   minutes: number
   path: string
+  preset: string
   processors: number
   reverse: boolean
   skipScan: boolean

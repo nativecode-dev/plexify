@@ -2,15 +2,15 @@ import ffmpeg from 'fluent-ffmpeg'
 
 import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
+import { Lincoln } from '@nnode/lincoln'
 
 import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
+import { FileContext } from './FileContext'
+import { getMediaInfo } from './MediaFunctions'
 import { MediaError } from './Errors/MediaError'
 import { StreamProgress } from './StreamProgress'
-import { Lincoln } from '@nnode/lincoln'
-import { FileContext } from './FileContext'
 import { formatFileName } from './FileNameFunctions'
-import { getMediaInfo } from './MediaFunctions'
 
 export class MediaConverter extends EventEmitter {
   static readonly events = {
@@ -33,7 +33,7 @@ export class MediaConverter extends EventEmitter {
     this.store = new MediaStore(logger)
   }
 
-  convert(file: StreamFile, format: string, dryrun: boolean = true): Promise<void> {
+  convert(file: StreamFile, preset: string, format: string, dryrun: boolean): Promise<void> {
     return new Promise(async (resolve, reject) => {
       const id = fs.basename(file.filename, false)
 
@@ -73,6 +73,7 @@ export class MediaConverter extends EventEmitter {
         .outputFormat(this.format)
         .withAudioCodec(this.audioCodec)
         .withVideoCodec(this.videoCodec)
+        .usingPreset(preset)
         .on('start', () => this.emit(MediaConverter.events.start, file.filename, context.filename.converted))
         .on('stop', () => this.emit(MediaConverter.events.stop))
         .on('end', () => this.complete(resolve, reject, context))
@@ -104,7 +105,12 @@ export class MediaConverter extends EventEmitter {
         }
 
         await fs.rename(context.filename.processing, context.filename.converted)
-        this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
+
+        if (await fs.exists(context.filename.processing)) {
+          await fs.delete(context.filename.processing)
+        }
+
+        this.log.trace('rename', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
       const id = fs.basename(context.filename.original, false)

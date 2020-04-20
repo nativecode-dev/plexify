@@ -31,6 +31,10 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       default: false,
       type: 'boolean',
     },
+    preset: {
+      default: 'normal',
+      type: 'string',
+    },
     processors: {
       default: os.cpus().length,
       type: 'number',
