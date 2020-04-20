@@ -14,9 +14,9 @@ export class DefaultCommand implements CommandModule<{}, PlexifyOptions> {
         choices: ['convert', 'info', 'scan'],
         type: 'string',
       })
+      .command(new ConvertCommand())
       .command(new InfoCommand())
       .command(new ScanCommand())
-      .command(new ConvertCommand())
   }
 
   handler = (args: Arguments<PlexifyOptions>) => {
