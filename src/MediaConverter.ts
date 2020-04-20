@@ -73,7 +73,6 @@ export class MediaConverter extends EventEmitter {
         .outputFormat(this.format)
         .withAudioCodec(this.audioCodec)
         .withVideoCodec(this.videoCodec)
-        .usingPreset(preset)
         .on('start', () => this.emit(MediaConverter.events.start, file.filename, context.filename.converted))
         .on('stop', () => this.emit(MediaConverter.events.stop))
         .on('end', () => this.complete(resolve, reject, context))
