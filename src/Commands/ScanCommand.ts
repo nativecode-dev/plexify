@@ -14,12 +14,10 @@ export class ScanCommand extends BaseCommand<ScanOptions> {
       type: 'boolean',
     },
     minutes: {
-      alias: 'a',
       default: 0,
       type: 'number',
     },
     reverse: {
-      alias: 'r',
       default: false,
       type: 'boolean',
     },

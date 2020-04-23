@@ -1,5 +1,5 @@
-import { PlexifyOptions } from './PlexifyOptions'
+import { DefaultOptions } from './DefaultOptions'
 
-export interface InfoOptions extends PlexifyOptions {
+export interface InfoOptions extends DefaultOptions {
   filename: string
 }

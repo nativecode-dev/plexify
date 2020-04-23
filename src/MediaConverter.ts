@@ -2,13 +2,15 @@ import ffmpeg from 'fluent-ffmpeg'
 
 import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
+import { Lincoln } from '@nnode/lincoln'
 
 import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
+import { FileContext } from './FileContext'
+import { getMediaInfo } from './MediaFunctions'
 import { MediaError } from './Errors/MediaError'
 import { StreamProgress } from './StreamProgress'
-import { Lincoln } from '@nnode/lincoln'
-import { FileContext } from './FileContext'
+import { formatFileName } from './FileNameFunctions'
 
 export class MediaConverter extends EventEmitter {
   static readonly events = {
@@ -31,10 +33,8 @@ export class MediaConverter extends EventEmitter {
     this.store = new MediaStore(logger)
   }
 
-  convert(file: StreamFile, dryrun: boolean = true): Promise<void> {
+  convert(file: StreamFile, preset: string, format: string, dryrun: boolean): Promise<void> {
     return new Promise(async (resolve, reject) => {
-      const basename = fs.basename(file.filename, false)
-      const dirname = fs.dirname(file.filename)
       const id = fs.basename(file.filename, false)
 
       if (await this.store.locked(id)) {
@@ -47,7 +47,7 @@ export class MediaConverter extends EventEmitter {
         dryrun,
         file,
         filename: {
-          converted: fs.join(dirname, `${basename}.mp4`),
+          converted: formatFileName(file.filename, format),
           original: file.filename,
           processing: `${file.filename}.processing`,
           extension: {
@@ -104,11 +104,17 @@ export class MediaConverter extends EventEmitter {
         }
 
         await fs.rename(context.filename.processing, context.filename.converted)
-        this.log.trace('delete', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
+
+        if (await fs.exists(context.filename.processing)) {
+          await fs.delete(context.filename.processing)
+        }
+
+        this.log.trace('rename', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
       const id = fs.basename(context.filename.original, false)
-      await this.store.unlock(id, context.file.data)
+      const data = await getMediaInfo(context.file.filename)
+      await this.store.unlock(id, data)
 
       this.emit(MediaConverter.events.stop)
       resolve()

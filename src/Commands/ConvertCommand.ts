@@ -19,18 +19,23 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
       default: false,
       type: 'boolean',
     },
+    format: {
+      default: '{dirname}/{basename}.mp4',
+      type: 'string',
+    },
     minutes: {
-      alias: 'a',
-      default: 0,
+      default: 120,
       type: 'number',
     },
     reverse: {
-      alias: 'r',
       default: false,
       type: 'boolean',
     },
+    preset: {
+      default: 'normal',
+      type: 'string',
+    },
     processors: {
-      alias: 'p',
       default: os.cpus().length,
       type: 'number',
     },
@@ -44,7 +49,7 @@ export class ConvertCommand extends BaseCommand<ConvertOptions> {
     const bars = new BarManager(args)
 
     if (args.skipScan) {
-      // Get all documents
+      //
     } else {
       const scanned = await this.scan(args, bars)
       await this.transcode(args, bars, scanned)
