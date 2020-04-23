@@ -1,5 +1,5 @@
 {
-  "name": "plexify",
+  "name": "@nativecode/plexify",
   "version": "0.0.0",
   "description": "Plexify's video files (h.265)",
   "license": "Apache-2.0",
