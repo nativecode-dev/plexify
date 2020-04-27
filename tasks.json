@@ -2,7 +2,13 @@
   "tasks": {
     "build": [
       "[lint]",
-      "tsc --project tsconfig.json"
+      "rimraf dist",
+      "tsc --project tsconfig.json",
+      "ncc build bin/index.js --out dist/build",
+      "nexe bin/index.js -o dist/linux/plexify -t linux-x86"
+    ],
+    "build-docker": [
+      "docker build --rm -f Dockerfile -t plexify ."
     ],
     "lint": [
       "prettier --loglevel silent --write \"src/**/*.ts\"",
