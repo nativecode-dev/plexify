@@ -9,7 +9,7 @@ export function formatFileName(filename: string, format: string): string {
     filename,
   }
 
-  const formatted = Object.keys(context).reduce((results, name) => results.replace(`{${name}}`, context[name]), format)
+  const formatted = Object.keys(context).reduce((results, name) => results.replace(`\{${name}\}`, context[name]), format)
 
   Logger.trace(format, formatted, context)
 
