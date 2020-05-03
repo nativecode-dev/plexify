@@ -4,8 +4,8 @@
       "[lint]",
       "rimraf dist",
       "tsc --project tsconfig.json",
-      "ncc build bin/index.js --out dist/build",
-      "nexe bin/index.js -o dist/linux/plexify -t linux-x86"
+      "#ncc build bin/index.js -m --out dist/build",
+      "nexe bin/index.js -o dist/linux/plexify"
     ],
     "build-docker": [
       "docker build --rm -f Dockerfile -t plexify ."

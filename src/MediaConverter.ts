@@ -113,7 +113,7 @@ export class MediaConverter extends EventEmitter {
       }
 
       const id = fs.basename(context.filename.original, false)
-      const data = await getMediaInfo(context.file.filename)
+      const data = await getMediaInfo(context.filename.converted)
       await this.store.unlock(id, data)
 
       this.emit(MediaConverter.events.stop)

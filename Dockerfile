@@ -26,8 +26,4 @@ FROM nativecode/ffmpeg-cuda:latest as FINAL
 
 COPY --from=BUILD /build/dist/linux/plexify /bin/plexify
 
-RUN chmod +x /bin/plexify
-
-SHELL ["/bin/bash", "-c"]
-
 ENTRYPOINT [ "/bin/plexify" ]
