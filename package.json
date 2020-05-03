@@ -1,5 +1,5 @@
 {
-  "name": "plexify",
+  "name": "@nativecode/plexify",
   "version": "0.0.0",
   "description": "Plexify's video files (h.265)",
   "license": "Apache-2.0",
@@ -14,8 +14,8 @@
   "main": "bin/index",
   "scripts": {
     "build": "cli-tasks build",
-    "cli": "ts-node --files --pretty src/plexify.ts",
-    "plexify": "ts-node src/index",
+    "build-docker": "cli-tasks build-docker",
+    "plexify": "ts-node --files --pretty src/index",
     "watch": "cli-tasks watch"
   },
   "husky": {
@@ -48,11 +48,14 @@
     "@types/pouchdb-upsert": "^2.2.6",
     "@types/redis": "^2.8.17",
     "@types/yargs": "^15.0.4",
+    "@zeit/ncc": "^0.22.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "husky": "^4.2.5",
     "mocha": "^7.1.1",
+    "nexe": "^3.3.2",
     "prettier": "^2.0.4",
+    "rimraf": "^3.0.2",
     "ts-node": "^8.8.2",
     "tslint": "^6.1.1",
     "tslint-config-standard": "^9.0.0",

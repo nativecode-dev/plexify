@@ -67,6 +67,13 @@ export class MediaConverter extends EventEmitter {
         return this.complete(resolve, reject, context)
       }
 
+      this.log.trace(
+        'original',
+        fs.basename(context.filename.original),
+        'converted',
+        fs.basename(context.filename.converted),
+      )
+
       return ffmpeg()
         .addInput(file.filename)
         .addOutput(context.filename.processing)
@@ -113,7 +120,7 @@ export class MediaConverter extends EventEmitter {
       }
 
       const id = fs.basename(context.filename.original, false)
-      const data = await getMediaInfo(context.file.filename)
+      const data = await getMediaInfo(context.filename.converted)
       await this.store.unlock(id, data)
 
       this.emit(MediaConverter.events.stop)
@@ -121,6 +128,7 @@ export class MediaConverter extends EventEmitter {
     } catch (error) {
       this.log.error(error)
       reject(error)
+      throw error
     }
   }
 }

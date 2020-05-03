@@ -110,8 +110,6 @@ export class MediaScanner extends EventEmitter {
     this.emit(MediaScanner.events.progress, filename, locked)
 
     if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
-      this.log.debug(id, 'convertible')
-
       const streamFile: StreamFile = {
         audio,
         video,
