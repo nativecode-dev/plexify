@@ -9,19 +9,21 @@ import { MediaInfo } from './MediaInfo'
 
 PouchDB.plugin(Upsert)
 
+const COUCHDB_URL = process.env.PLEXIFY_COUCHDB_URL || 'http://couchdb.in.nativecode.com:5984/plexify'
+
 export class MediaStore {
   readonly database: PouchDB.Database
 
   private readonly log: Lincoln
 
   constructor(logger: Lincoln) {
-    this.database = new PouchDB('http://couchdb.in.nativecode.com:5984/plexify', {
+    this.database = new PouchDB(COUCHDB_URL, {
       adapter: 'http',
       auth: {
         password: process.env.PLEXIFY_COUCHDB_PASSWORD || '2bpi9AN0o1Q5ZcLs',
         username: process.env.PLEXIFY_COUCHDB_USERNAME || 'admin',
       },
-      name: process.env.PLEXIFY_COUCHDB_URL || 'http://couchdb.in.nativecode.com:5984/plexify',
+      name: COUCHDB_URL,
     })
     this.log = logger.extend('storage')
   }
