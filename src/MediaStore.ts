@@ -18,10 +18,10 @@ export class MediaStore {
     this.database = new PouchDB('http://couchdb.in.nativecode.com:5984/plexify', {
       adapter: 'http',
       auth: {
-        password: '2bpi9AN0o1Q5ZcLs',
-        username: 'admin',
+        password: process.env.PLEXIFY_COUCHDB_PASSWORD || '2bpi9AN0o1Q5ZcLs',
+        username: process.env.PLEXIFY_COUCHDB_USERNAME || 'admin',
       },
-      name: 'http://couchdb.in.nativecode.com:5984/plexify',
+      name: process.env.PLEXIFY_COUCHDB_URL || 'http://couchdb.in.nativecode.com:5984/plexify',
     })
     this.log = logger.extend('storage')
   }
