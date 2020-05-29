@@ -26,4 +26,7 @@ FROM nativecode/ffmpeg-cuda:latest as FINAL
 
 COPY --from=BUILD /build/dist/linux/plexify /bin/plexify
 
+WORKDIR /media
+VOLUME /media
+
 ENTRYPOINT [ "/bin/plexify" ]

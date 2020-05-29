@@ -34,7 +34,7 @@ export class MediaConverter extends EventEmitter {
   }
 
   convert(file: StreamFile, preset: string, format: string, dryrun: boolean): Promise<void> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
       const id = fs.basename(file.filename, false)
 
       if (await this.store.locked(id)) {
