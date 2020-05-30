@@ -33,6 +33,7 @@ COPY /tslint.json /build/tslint.json
 SHELL ["/bin/bash", "-c"]
 
 RUN set -e \
+  && npm install -g lerna \
   && npm install \
   && npm run build \
   ;

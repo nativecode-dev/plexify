@@ -4,7 +4,7 @@
   "description": "Plexify's video files (h.265)",
   "license": "Apache-2.0",
   "repository": {
-    "url": "https://git.nativecode.net/opensource/plexify"
+    "url": "git@git.nativecode.net:opensource/plexify"
   },
   "author": "opensource@nativecode.com",
   "keywords": [],
@@ -58,6 +58,7 @@
     "nexe": "^3.3.2",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
+    "semantic-release-configuration": "^1.0.20",
     "ts-node": "^8.10.2",
     "tslint": "^6.1.2",
     "tslint-config-standard": "^9.0.0",
