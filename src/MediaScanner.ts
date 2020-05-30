@@ -63,26 +63,24 @@ export class MediaScanner extends EventEmitter {
     this.emit(MediaScanner.events.start, total)
 
     const files = await Throttle(
-      filtered.map((filename, index) => {
-        return async () => {
-          try {
-            const id = fs.basename(filename, false)
+      filtered.map((filename, index) => async () => {
+        try {
+          const id = fs.basename(filename, false)
 
-            if (await this.media.exists(id)) {
-              const document = await this.media.get(id)
-              return this.convertible(filename, document, index, total)
-            }
-
-            const info = await getMediaInfo(filename)
-            const document: MediaInfo = { _id: id, host: null, locked: false, source: info }
-            await this.media.upsert(id, info)
+          if (await this.media.exists(id)) {
+            const document = await this.media.get(id)
             return this.convertible(filename, document, index, total)
-          } catch (error) {
-            this.log.error(error)
           }
 
-          return null
+          const info = await getMediaInfo(filename)
+          const document: MediaInfo = { _id: id, host: null, locked: false, source: info }
+          await this.media.upsert(id, info)
+          return this.convertible(filename, document, index, total)
+        } catch (error) {
+          this.log.error(error)
         }
+
+        return null
       }),
     )
 
