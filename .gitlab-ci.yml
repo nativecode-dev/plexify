@@ -19,8 +19,8 @@ master:
     - master
   script:
     - docker build --rm -t nativecode/plexify . || exit 1
-    - docker tag nativecode/plexify nativecode/plexify:$CI_COMMIT_REF_SLUG || exit 1
-    - docker push nativecode/plexify:$CI_COMMIT_REF_SLUG || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:${CI_COMMIT_SHA:0:8} || exit 1
+    - docker push nativecode/plexify:${CI_COMMIT_SHA:0:8} || exit 1
     - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
     - docker push nativecode/plexify:latest || exit 1
   variables:
@@ -35,8 +35,8 @@ develop:
     - develop
   script:
     - docker build --rm -t nativecode/plexify . || exit 1
-    - docker tag nativecode/plexify nativecode/plexify:next-$CI_COMMIT_REF_SLUG || exit 1
-    - docker push nativecode/plexify:next-$CI_COMMIT_REF_SLUG || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:next-${CI_COMMIT_SHA:0:8} || exit 1
+    - docker push nativecode/plexify:next-${CI_COMMIT_SHA:0:8} || exit 1
     - docker tag nativecode/plexify nativecode/plexify:next || exit 1
     - docker push nativecode/plexify:next || exit 1
   variables:
