@@ -28,3 +28,19 @@ master:
     GIT_SUBMODULE_STRATEGY: recursive
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
+
+develop:
+  stage: build
+  only:
+    - develop
+  script:
+    - docker build --rm -t nativecode/plexify . || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:next-$CI_COMMIT_REF_SLUG || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:next || exit 1
+    - docker push nativecode/plexify:next-$CI_COMMIT_REF_SLUG || exit 1
+    - docker push nativecode/plexify:next || exit 1
+  variables:
+    DOCKER_HOST: tcp://localhost:2375
+    GIT_SUBMODULE_STRATEGY: recursive
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
