@@ -4,7 +4,7 @@ stages:
   - build
 
 services:
-  - docker:dind
+  - nativecode/node-build:latest
 
 before_script:
   - source .ci-env.sh
