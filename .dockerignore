@@ -7,10 +7,5 @@ lib/
 node_modules/
 
 .dockerignore
-.editorconfig
-.gitattributes
-.gitignore
-.npmignore
-.npmrc
 docker-compose.yaml
 Dockerfile

@@ -6,6 +6,7 @@ import { ConvertCommand } from './ConvertCommand'
 import { DefaultOptions } from '../Options/DefaultOptions'
 
 import { getAvailableCodecs, getAvailableEncoders, getAvailableFormats } from '../MediaFunctions'
+import { WatchCommand } from './WatchCommand'
 
 export class DefaultCommand implements CommandModule<{}, DefaultOptions> {
   command = '$0 [command]'
@@ -31,6 +32,7 @@ export class DefaultCommand implements CommandModule<{}, DefaultOptions> {
       .command(new ConvertCommand())
       .command(new ScanCommand())
       .command(new InfoCommand())
+      .command(new WatchCommand())
   }
 
   handler = async (args: Arguments<DefaultOptions>) => {

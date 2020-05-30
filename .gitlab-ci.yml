@@ -1,0 +1,30 @@
+image: docker:19
+
+stages:
+  - build
+
+services:
+  - docker:dind
+
+before_script:
+  - apk --update --no-cache add bash curl git grep gzip jq nodejs npm openssh-client tar
+  - source .ci-env.sh
+  - echo -n $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+  - .citools/setup-git ${BUILD_REPO_BRANCH} ${BUILD_REPO_GIT} ${BUILD_REPO_EMAIL}
+  - .citools/setup-ssh ${BUILD_REPO_DOMAIN} ${BUILD_REPO_SSHKEY_PATH} ${BUILD_REPO_DOMAIN_SSH}
+
+master:
+  stage: build
+  only:
+    - master
+  script:
+    - docker build --rm -t nativecode/plexify . || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:$CI_COMMIT_REF_SLUG || exit 1
+    - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
+    - docker push nativecode/plexify:$CI_COMMIT_REF_SLUG || exit 1
+    - docker push nativecode/plexify:latest || exit 1
+  variables:
+    DOCKER_HOST: tcp://localhost:2375
+    GIT_SUBMODULE_STRATEGY: recursive
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
