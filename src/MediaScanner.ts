@@ -62,21 +62,30 @@ export class MediaScanner extends EventEmitter {
 
     this.emit(MediaScanner.events.start, total)
 
-    const documents = await this.media.all({
-      selector: {
-        'source.streams': {
-          $elemMatch: {
-            codec_name: {
-              $ne: 'hevc',
-            },
-            codec_type: {
-              $eq: 'video',
+    const fetcher = async () => {
+      try {
+        return await this.media.all({
+          selector: {
+            'source.streams': {
+              $elemMatch: {
+                codec_name: {
+                  $ne: 'hevc',
+                },
+                codec_type: {
+                  $eq: 'video',
+                },
+              },
             },
           },
-        },
-      },
-      fields: ['_id', 'filename'],
-    })
+          fields: ['_id', 'filename'],
+        })
+      } catch (error) {
+        this.log.error(new BError('scan.fetcher', error))
+        return []
+      }
+    }
+
+    const documents: MediaInfo[] = await fetcher()
 
     const files = await Throttle(
       filtered.map((fullname, index) => async () => {
