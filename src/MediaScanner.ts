@@ -42,8 +42,6 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    this.log.info('[scan] retrieving cached')
-
     const documents: MediaInfo[] = await this.media.all({
       selector: {
         'source.streams': {
@@ -60,12 +58,14 @@ export class MediaScanner extends EventEmitter {
       fields: ['_id', 'filename'],
     })
 
+    this.log.info('[scan] retrieving cached', { cached: documents.length })
+
     this.log.info('[scan] gathering globs')
-
     const unsorted = await fs.globs(this.globs, path)
-    this.log.info('[scan] unsorted', { length: unsorted.length })
 
+    this.log.info('[scan] unsorted', { length: unsorted.length })
     const sorted = this.applySort(unsorted, reverse)
+
     this.log.info('[scan] sorted', sorted.length, reverse)
 
     const filtered = await this.applyAgeFilter(
