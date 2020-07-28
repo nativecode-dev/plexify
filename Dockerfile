@@ -44,6 +44,7 @@ RUN set -e \
 # FINAL STAGE
 # -----------------------------------------------------------------------------
 FROM BASE as FINAL
+ENV DEBUG *
 COPY --from=BUILD /build/bin /bin/plexify
 WORKDIR /media
 VOLUME /media

@@ -12,7 +12,7 @@ before_script:
   - .citools/setup-git ${BUILD_REPO_BRANCH} ${BUILD_REPO_GIT} ${BUILD_REPO_EMAIL}
   - .citools/setup-ssh ${BUILD_REPO_DOMAIN} ${BUILD_REPO_SSHKEY_PATH} ${BUILD_REPO_DOMAIN_SSH}
 
-master:
+release:
   stage: build
   only:
     - master
@@ -23,13 +23,15 @@ master:
     - docker push nativecode/plexify:$PACKAGE_VERSION || exit 1
     - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
     - docker push nativecode/plexify:latest || exit 1
+    - git tag ${PACKAGE_VERSION}
+    - git push --tags
   variables:
     DOCKER_HOST: tcp://localhost:2375
     GIT_SUBMODULE_STRATEGY: recursive
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
 
-develop:
+prerelease:
   stage: build
   only:
     - develop
@@ -39,6 +41,8 @@ develop:
     - docker push nativecode/plexify:next-${CI_COMMIT_SHA:0:8} || exit 1
     - docker tag nativecode/plexify nativecode/plexify:next || exit 1
     - docker push nativecode/plexify:next || exit 1
+    - git tag ${CI_COMMIT_SHA:0:8}
+    - git push --tags
   variables:
     DOCKER_HOST: tcp://localhost:2375
     GIT_SUBMODULE_STRATEGY: recursive
