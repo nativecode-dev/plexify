@@ -42,6 +42,24 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
+    this.log.info('[scan] retrieving cached')
+
+    const documents: MediaInfo[] = await this.media.all({
+      selector: {
+        'source.streams': {
+          $elemMatch: {
+            codec_name: {
+              $ne: 'hevc',
+            },
+            codec_type: {
+              $eq: 'video',
+            },
+          },
+        },
+      },
+      fields: ['_id', 'filename'],
+    })
+
     this.log.info('[scan] gathering globs')
 
     const unsorted = await fs.globs(this.globs, path)
@@ -61,31 +79,6 @@ export class MediaScanner extends EventEmitter {
     this.log.info('[scan] total', { total })
 
     this.emit(MediaScanner.events.start, total)
-
-    const fetcher = async () => {
-      try {
-        return await this.media.all({
-          selector: {
-            'source.streams': {
-              $elemMatch: {
-                codec_name: {
-                  $ne: 'hevc',
-                },
-                codec_type: {
-                  $eq: 'video',
-                },
-              },
-            },
-          },
-          fields: ['_id', 'filename'],
-        })
-      } catch (error) {
-        this.log.error(new BError('scan.fetcher', error))
-        return []
-      }
-    }
-
-    const documents: MediaInfo[] = await fetcher()
 
     const files = await Throttle(
       filtered.map((fullname, index) => async () => {
