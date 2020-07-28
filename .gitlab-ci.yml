@@ -8,6 +8,11 @@ stages:
   - merge
   - publish
 
+before_script:
+  - source .ci-env.sh
+  - .citools/setup-git ${BUILD_REPO_BRANCH} ${BUILD_REPO_GIT} ${BUILD_REPO_EMAIL}
+  - .citools/setup-ssh ${BUILD_REPO_DOMAIN} ${BUILD_REPO_SSHKEY_PATH} ${BUILD_REPO_DOMAIN_SSH}
+
 continuous:
   stage: build
   except:
