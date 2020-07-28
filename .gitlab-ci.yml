@@ -1,8 +1,12 @@
 image: nativecode/node-build:latest
 
+cache:
+  key: "$CI_JOB_STAGE-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+  paths:
+    - bin
+
 stages:
   - build
-  - prepare
   - publish
 
 services:
@@ -27,7 +31,7 @@ continuous:
     GIT_SUBMODULE_STRATEGY: recursive
 
 prepare:
-  stage: prepare
+  stage: publish
   only:
     - develop
     - master
