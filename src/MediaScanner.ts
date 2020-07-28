@@ -1,15 +1,14 @@
 import moment from 'moment'
 
-import { FfprobeData, FfprobeStream } from 'fluent-ffmpeg'
-
 import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
+import { Lincoln } from '@nnode/lincoln'
 import { Throttle } from '@nnode/common'
+import { FfprobeData, FfprobeStream } from 'fluent-ffmpeg'
 
 import { MediaStore } from './MediaStore'
 import { StreamFile } from './StreamFile'
 import { getMediaInfo } from './MediaFunctions'
-import { Lincoln } from '@nnode/lincoln'
 import { MediaInfo } from './MediaInfo'
 
 export type MediaFileNameFilter = (filename: string) => boolean
@@ -42,34 +41,48 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    this.log.info('scan', 'gathering globs')
+    this.log.info('[scan] gathering globs')
 
     const unsorted = await fs.globs(this.globs, path)
-    this.log.trace('scan', 'unsorted', unsorted.length)
+    this.log.trace('[scan] unsorted', { length: unsorted.length })
 
     const sorted = this.applySort(unsorted, reverse)
-    this.log.trace('scan', 'sorted', sorted.length, reverse)
+    this.log.trace('[scan] sorted', sorted.length, reverse)
 
     const filtered = await this.applyAgeFilter(
       sorted.filter((filename) => filter(filename)),
       minutes,
     )
 
-    this.log.trace('scan', 'filtered', filtered.length)
+    this.log.trace('[scan] filtered', { length: filtered.length })
 
     const total = filtered.length
-    this.log.trace('scan', 'total', total)
+    this.log.trace('[scan] total', { total })
 
     this.emit(MediaScanner.events.start, total)
 
-    const documents = await this.media.all()
+    const documents = await this.media.all({
+      selector: {
+        'source.streams': {
+          $elemMatch: {
+            codec_name: {
+              $ne: 'hevc',
+            },
+            codec_type: {
+              $eq: 'video',
+            },
+          },
+        },
+      },
+      fields: ['_id'],
+    })
 
     const files = await Throttle(
       filtered.map((filename, index) => async () => {
         try {
           const id = fs.basename(filename, false)
 
-          if (documents.map((doc) => doc?._id).includes(id)) {
+          if (documents.map((doc) => doc._id).includes(id)) {
             const document = await this.media.get(id)
             return this.convertible(filename, document, index, total)
           }
