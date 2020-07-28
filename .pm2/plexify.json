@@ -1,6 +1,6 @@
 {
   "name": "plexify",
-  "script": "npm run plexify -- convert /mnt/other --disable-bars --processors 2",
+  "script": "node bin/index.js convert /mnt/other --disable-bars --processors 2",
   "watch": [
     "src"
   ],
@@ -8,7 +8,7 @@
     "DEBUG": "*"
   },
   "env_prod": {
-    "DEBUG": "plexify:*",
+    "DEBUG": "*:plexify*",
     "NODE_ENV": "production"
   }
 }
