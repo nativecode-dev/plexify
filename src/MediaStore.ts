@@ -1,5 +1,6 @@
 import os from 'os'
 import PouchDB from 'pouchdb'
+import Find from 'pouchdb-find'
 import Upsert from 'pouchdb-upsert'
 
 import { Lincoln } from '@nnode/lincoln'
@@ -7,6 +8,7 @@ import { FfprobeData } from 'fluent-ffmpeg'
 
 import { MediaInfo } from './MediaInfo'
 
+PouchDB.plugin(Find)
 PouchDB.plugin(Upsert)
 
 const COUCHDB_URL = process.env.PLEXIFY_COUCHDB_URL || 'http://couchdb.in.nativecode.com:5984/plexify'
@@ -28,32 +30,32 @@ export class MediaStore {
     this.log = logger.extend('storage')
   }
 
-  async all() {
-    const docs = await this.database.allDocs<MediaInfo>()
-    return docs.rows.map(row => row.doc)
+  async all(options?: PouchDB.Find.FindRequest<MediaInfo>) {
+    const results = await this.database.find(options || { selector: {} })
+    return results.docs
   }
 
   async exists(id: string) {
     try {
       const document = await this.database.get<MediaInfo>(id)
-      return document._id === id
+      return document._id === this.cleanid(id)
     } catch {
       return false
     }
   }
 
   get(id: string) {
-    return this.database.get<MediaInfo>(id)
+    return this.database.get<MediaInfo>(this.cleanid(id))
   }
 
   lock(id: string, source: FfprobeData) {
-    this.log.trace('locked', id)
-    return this.upsert(id, source, true, os.hostname())
+    this.log.trace('locked', this.cleanid(id))
+    return this.upsert(this.cleanid(id), source, true, os.hostname())
   }
 
   async locked(id: string) {
     try {
-      const document = await this.database.get<MediaInfo>(id)
+      const document = await this.database.get<MediaInfo>(this.cleanid(id))
       return document.locked === true && document.host !== os.hostname()
     } catch {
       return false
@@ -61,16 +63,20 @@ export class MediaStore {
   }
 
   unlock(id: string, source: FfprobeData) {
-    this.log.trace('unlocked', id)
-    return this.upsert(id, source, false, null)
+    this.log.trace('unlocked', this.cleanid(id))
+    return this.upsert(this.cleanid(id), source, false, null)
   }
 
   upsert(id: string, source: FfprobeData, locked: boolean = false, host: string | null = null) {
-    return this.database.upsert<MediaInfo>(id, (target: MediaInfo) => {
+    return this.database.upsert<MediaInfo>(this.cleanid(id), (target: MediaInfo) => {
       target.host = host
       target.locked = locked
       target.source = source
       return target
     })
+  }
+
+  private cleanid(id: string): string {
+    return id.replace(/\s/g, '.')
   }
 }
