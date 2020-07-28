@@ -9,7 +9,7 @@ COPY /package.json /app
 ENV DEBUG *
 
 RUN set -e \
-  && apk --update --no-cache add bash curl ffmpeg git grep jq \
+  && apk --update --no-cache add bash curl ffmpeg git grep jq x265-libs \
   && npm ci --production \
   && mkdir -p /app/media \
   ;
