@@ -30,7 +30,7 @@ release:
   only:
     - tags
   script:
-    - PACKAGE_VERSION=v$(git describe --abbrev=0 --tags)
+    - PACKAGE_VERSION=$(git describe --abbrev=0 --tags)
     - docker build --rm -t nativecode/plexify . || exit 1
     - docker tag nativecode/plexify nativecode/plexify:${PACKAGE_VERSION} || exit 1
     - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
