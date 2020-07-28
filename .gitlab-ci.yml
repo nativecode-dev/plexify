@@ -1,5 +1,8 @@
 image: nativecode/node-build:latest
 
+services:
+  - nativecode/node-build:latest
+
 stages:
   - build
   - merge
