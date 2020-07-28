@@ -40,4 +40,3 @@ release:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
-    GIT_SUBMODULE_STRATEGY: recursive
