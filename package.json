@@ -28,6 +28,7 @@
     "@nnode/lincoln": "^0.7.0",
     "@nnode/lincoln-debug": "^0.5.1",
     "@nofrills/fs": "^12.0.0",
+    "@semantic-release/gitlab": "^6.0.4",
     "chokidar": "^3.4.1",
     "cli-progress": "^3.8.2",
     "fluent-ffmpeg": "^2.1.2",

@@ -3,7 +3,7 @@ WORKDIR /app
 COPY /package-lock.json /app
 COPY /package.json /app
 RUN set -e \
-  && apk --update --no-cache add bash curl git grep jq \
+  && apk --update --no-cache add bash curl ffmpeg git grep jq \
   && npm install --production \
   ;
 
