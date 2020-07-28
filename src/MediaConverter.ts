@@ -1,5 +1,6 @@
 import ffmpeg from 'fluent-ffmpeg'
 
+import { BError } from 'berror'
 import { fs } from '@nofrills/fs'
 import { EventEmitter } from 'events'
 import { Lincoln } from '@nnode/lincoln'
@@ -35,7 +36,7 @@ export class MediaConverter extends EventEmitter {
 
   convert(file: StreamFile, preset: string, format: string, dryrun: boolean): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-      const id = fs.basename(file.filename, false)
+      const id = fs.basename(file.fullpath, false)
 
       if (await this.store.locked(id)) {
         return
@@ -47,12 +48,12 @@ export class MediaConverter extends EventEmitter {
         dryrun,
         file,
         filename: {
-          converted: formatFileName(file.filename, format),
-          original: file.filename,
-          processing: `${file.filename}.processing`,
+          converted: formatFileName(file.fullpath, format),
+          original: file.fullpath,
+          processing: `${file.fullpath}.processing`,
           extension: {
             converted: '.mp4',
-            original: fs.ext(file.filename),
+            original: fs.ext(file.fullpath),
           },
         },
       }
@@ -75,17 +76,17 @@ export class MediaConverter extends EventEmitter {
       )
 
       return ffmpeg()
-        .addInput(file.filename)
+        .addInput(file.fullpath)
         .addOutput(context.filename.processing)
         .outputFormat(this.format)
         .withAudioCodec(this.audioCodec)
         .withVideoCodec(this.videoCodec)
-        .on('start', () => this.emit(MediaConverter.events.start, file.filename, context.filename.converted))
+        .on('start', () => this.emit(MediaConverter.events.start, file.fullpath, context.filename.converted))
         .on('stop', () => this.emit(MediaConverter.events.stop))
         .on('end', () => this.complete(resolve, reject, context))
         .on('progress', (progress: StreamProgress) => this.emit(MediaConverter.events.progress, progress))
         .on('error', async (error, stdout, stderr) => {
-          this.log.error(error)
+          this.log.error(new BError('convert', error))
           this.log.trace(stdout)
           this.log.trace(stderr)
           await this.store.unlock(id, context.file.data)
@@ -101,8 +102,8 @@ export class MediaConverter extends EventEmitter {
 
       if (context.dryrun === false) {
         if (context.filename.extension.original !== '.mp4') {
-          await fs.delete(context.file.filename)
-          this.log.trace('delete', fs.basename(context.file.filename))
+          await fs.delete(context.file.fullpath)
+          this.log.trace('delete', fs.basename(context.file.fullpath))
         }
 
         if (await fs.exists(context.filename.converted)) {
@@ -126,7 +127,7 @@ export class MediaConverter extends EventEmitter {
       this.emit(MediaConverter.events.stop)
       resolve()
     } catch (error) {
-      this.log.error(error)
+      this.log.error(new BError('complete', error))
       reject(error)
       throw error
     }

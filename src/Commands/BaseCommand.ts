@@ -3,6 +3,7 @@ import { Lincoln } from '@nnode/lincoln'
 import { Throttle } from '@nnode/common'
 import { CommandModule, CommandBuilder, Arguments } from 'yargs'
 
+import { BError } from 'berror'
 import { Logger } from '../Logger'
 import { BarManager } from '../BarManager'
 import { StreamFile } from '../StreamFile'
@@ -72,16 +73,16 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
 
     await Throttle(
       scanned.map((file) => async () => {
-        const id = fs.basename(file.filename, false)
+        const id = fs.basename(file.fullpath, false)
         const converter = new MediaConverter(Logger)
 
         const handleProgress = (progress: StreamProgress) => {
-          bars.updateBar(id, progress.percent, { message: fs.basename(file.filename) })
+          bars.updateBar(id, progress.percent, { message: fs.basename(file.fullpath) })
         }
 
         const handleStart = () => {
           bars.createBar(id)
-          bars.startBar(id, 100, { message: file.filename })
+          bars.startBar(id, 100, { message: file.fullpath })
         }
 
         const handleStop = () => {
@@ -95,7 +96,7 @@ export abstract class BaseCommand<T extends PlexifyOptions> implements CommandMo
         try {
           await converter.convert(file, args.preset, args.format, args.dryrun)
         } catch (error) {
-          this.log.error(error)
+          this.log.error(new BError('transcode', error))
         } finally {
           converter.off('progress', handleProgress)
           converter.off('stop', handleStop)

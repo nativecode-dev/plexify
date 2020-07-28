@@ -4,12 +4,12 @@ import { ConfigurationOptions } from './Options/ConfigurationOptions'
 
 const DefaultConfigurationOptions: ConfigurationOptions = {
   couchdb: {
-    adapter: process.env.COUCHDB_ADAPTER || 'http',
+    adapter: process.env.PLEXIFY_COUCHDB_ADAPTER || 'http',
     auth: {
-      login: process.env.COUCHDB_LOGIN || 'admin',
-      password: process.env.COUCHDB_PASSWORD || '',
+      login: process.env.PLEXIFY_COUCHDB_LOGIN || 'admin',
+      password: process.env.PLEXIFY_COUCHDB_PASSWORD || '',
     },
-    url: process.env.COUCHDB_HOST || 'http://localhost',
+    url: process.env.PLEXIFY_COUCHDB_HOST || 'http://localhost',
   },
 }
 

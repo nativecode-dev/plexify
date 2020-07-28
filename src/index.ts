@@ -1,16 +1,15 @@
 import yargs from 'yargs'
 
+import { BError } from 'berror'
 import { fs } from '@nofrills/fs'
 
 import { Logger } from './Logger'
+
 import { DefaultCommand } from './Commands/DefaultCommand'
 import { DefaultOptions } from './Options/DefaultOptions'
-import { Configuration } from './Configuration'
 
 async function main() {
   const filepath = fs.join(process.env.HOME || process.cwd(), '.config')
-  const configuration = new Configuration(filepath, 'plexify.json')
-  const config = await configuration.load()
 
   const args = yargs
     .scriptName('plexify')
@@ -19,8 +18,6 @@ async function main() {
     .parse()
 
   Logger.trace(args)
-
-  await configuration.save(config)
 }
 
-main().catch(console.error)
+main().catch((error) => Logger.error(new BError('catch-all', error)))

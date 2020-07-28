@@ -4,6 +4,6 @@ export interface StreamFile {
   audio: FfprobeStream
   data: FfprobeData
   format: FfprobeFormat
-  filename: string
+  fullpath: string
   video: FfprobeStream
 }

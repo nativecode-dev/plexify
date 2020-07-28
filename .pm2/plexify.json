@@ -8,7 +8,7 @@
     "DEBUG": "plexify:*"
   },
   "env_prod": {
-    "DEBUG": "plexify:*",
+    "DEBUG": "plexify:*:debug,info,warn",
     "NODE_ENV": "production"
   }
 }
