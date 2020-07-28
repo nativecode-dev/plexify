@@ -187,10 +187,14 @@ export class MediaScanner extends EventEmitter {
   }
 
   private findAudioStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type === 'audio').reduce((_, current) => current)
+    return data.streams
+      .filter((stream) => stream.codec_type === 'audio')
+      .reduce<FfprobeStream | any>((_, current) => current, {})
   }
 
   private findVideoStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type === 'video').reduce((_, current) => current)
+    return data.streams
+      .filter((stream) => stream.codec_type === 'video')
+      .reduce<FfprobeStream | any>((_, current) => current, {})
   }
 }
