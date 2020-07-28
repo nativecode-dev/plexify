@@ -96,8 +96,6 @@ export class MediaScanner extends EventEmitter {
 
           const source = await getMediaInfo(fullname)
 
-          console.log(filename, source)
-
           const document: MediaInfo = this.media.document({
             filename,
             filepath,
@@ -106,7 +104,7 @@ export class MediaScanner extends EventEmitter {
             source,
           })
 
-          await this.media.upsert(filename, document)
+          console.log(await this.media.upsert(filename, document))
 
           return this.convertable(document, index, total)
         } catch (error) {
