@@ -84,7 +84,10 @@ export class MediaScanner extends EventEmitter {
 
           if (documents.map((doc) => doc._id).includes(id)) {
             const document = await this.media.get(id)
-            return this.convertible(filename, document, index, total)
+
+            if (document) {
+              return this.convertible(filename, document, index, total)
+            }
           }
 
           const info = await getMediaInfo(filename)
