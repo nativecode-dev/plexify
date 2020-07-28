@@ -62,12 +62,14 @@ export class MediaScanner extends EventEmitter {
 
     this.emit(MediaScanner.events.start, total)
 
+    const documents = await this.media.all()
+
     const files = await Throttle(
       filtered.map((filename, index) => async () => {
         try {
           const id = fs.basename(filename, false)
 
-          if (await this.media.exists(id)) {
+          if (documents.map((doc) => doc?._id).includes(id)) {
             const document = await this.media.get(id)
             return this.convertible(filename, document, index, total)
           }

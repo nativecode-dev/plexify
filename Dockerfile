@@ -16,4 +16,4 @@ RUN set -e \
 
 VOLUME /app/media
 
-ENTRYPOINT [ "/usr/local/bin/node", "/bin/plexify/index.js" ]
+ENTRYPOINT [ "/usr/local/bin/node", "/app/bin/index.js" ]

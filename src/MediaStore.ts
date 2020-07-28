@@ -28,6 +28,11 @@ export class MediaStore {
     this.log = logger.extend('storage')
   }
 
+  async all() {
+    const docs = await this.database.allDocs<MediaInfo>()
+    return docs.rows.map(row => row.doc)
+  }
+
   async exists(id: string) {
     try {
       const document = await this.database.get<MediaInfo>(id)
