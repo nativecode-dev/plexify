@@ -1,13 +1,8 @@
 image: nativecode/node-build:latest
 
-cache:
-  key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
-  paths:
-    - bin
-  policy: push
-
 stages:
   - build
+  - merge
   - publish
 
 services:
@@ -32,16 +27,21 @@ continuous:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
 
+merge:
+  stage: merge
+  only:
+    - merge_requests
+  script:
+    - npm ci
+    - npm run build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
 prepare:
   stage: publish
   only:
     - develop
     - master
-  cache:
-    key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - bin
-    policy: push
   script:
     - npm ci
     - npm run build
@@ -53,13 +53,10 @@ release:
   stage: publish
   only:
     - tags
-  cache:
-    key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - bin
-    policy: pull
   script:
     - PACKAGE_VERSION=$(git describe --abbrev=0 --tags)
+    - npm ci
+    - npm run build
     - docker build --rm -t nativecode/plexify . || exit 1
     - docker tag nativecode/plexify nativecode/plexify:${PACKAGE_VERSION} || exit 1
     - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
