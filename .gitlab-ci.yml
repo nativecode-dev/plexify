@@ -1,26 +1,49 @@
 image: nativecode/node-build:latest
 
-stages:
-  - prepare
-  - publish
-
 services:
   - nativecode/node-build:latest
 
+stages:
+  - build
+  - merge
+  - publish
+
 before_script:
   - source .ci-env.sh
-  - echo -n $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
   - .citools/setup-git ${BUILD_REPO_BRANCH} ${BUILD_REPO_GIT} ${BUILD_REPO_EMAIL}
   - .citools/setup-ssh ${BUILD_REPO_DOMAIN} ${BUILD_REPO_SSHKEY_PATH} ${BUILD_REPO_DOMAIN_SSH}
 
+continuous:
+  stage: build
+  except:
+    - develop
+    - master
+    - tags
+  script:
+    - npm ci
+    - npm run build || exit 1
+    - npx semantic-release -d
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
+merge:
+  stage: merge
+  only:
+    - merge_requests
+  script:
+    - npm ci
+    - npm run build || exit 1
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
 prepare:
-  stage: prepare
+  stage: publish
   only:
     - develop
     - master
   script:
     - npm ci
-    - npm run build
+    - npm run build || exit 1
     - npx semantic-release
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
@@ -30,12 +53,13 @@ release:
   only:
     - tags
   script:
-    - PACKAGE_VERSION=v$(git describe --abbrev=0 --tags)
+    - echo -n $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
+    - PACKAGE_VERSION=$(git describe --abbrev=0 --tags)
+    - npm ci
+    - npm run build || exit 1
     - docker build --rm -t nativecode/plexify . || exit 1
     - docker tag nativecode/plexify nativecode/plexify:${PACKAGE_VERSION} || exit 1
-    - docker tag nativecode/plexify nativecode/plexify:latest || exit 1
     - docker push nativecode/plexify:${PACKAGE_VERSION} || exit 1
-    - docker push nativecode/plexify:latest || exit 1
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://localhost:2375

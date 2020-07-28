@@ -1,7 +1,6 @@
 .vs/
 .vscode/
 .git/
-bin/
 dist/
 lib/
 node_modules/
