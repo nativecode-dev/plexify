@@ -1,5 +1,6 @@
 import yargs from 'yargs'
 
+import { BError } from 'berror'
 import { fs } from '@nofrills/fs'
 
 import { Logger } from './Logger'
@@ -19,4 +20,4 @@ async function main() {
   Logger.trace(args)
 }
 
-main().catch(console.error)
+main().catch((error) => Logger.error(new BError('catch-all', error)))
