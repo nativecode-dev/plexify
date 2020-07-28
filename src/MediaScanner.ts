@@ -86,6 +86,8 @@ export class MediaScanner extends EventEmitter {
           const filename = fs.basename(fullname)
           const filepath = fs.dirname(fullname)
 
+          console.log(filename, this.media.has(filename, documents))
+
           if (this.media.has(filename, documents)) {
             const document = await this.media.get(filename)
 
@@ -94,14 +96,14 @@ export class MediaScanner extends EventEmitter {
             }
           }
 
-          const info = await getMediaInfo(fullname)
+          const source = await getMediaInfo(fullname)
 
           const document: MediaInfo = this.media.document({
             filename,
             filepath,
             host: null,
             locked: false,
-            source: info,
+            source,
           })
 
           await this.media.upsert(filename, document)
