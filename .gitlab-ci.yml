@@ -1,5 +1,11 @@
 image: nativecode/node-build:latest
 
+cache:
+  key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
+  paths:
+    - bin
+  policy: push
+
 stages:
   - build
   - publish
@@ -32,7 +38,7 @@ prepare:
     - develop
     - master
   cache:
-    key: "$CI_JOB_STAGE-$CI_COMMIT_REF"
+    key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
     paths:
       - bin
     policy: push
@@ -48,7 +54,7 @@ release:
   only:
     - tags
   cache:
-    key: "$CI_JOB_STAGE-$CI_COMMIT_REF"
+    key: "$CI_JOB_STAGE-$CI_COMMIT_SHORT_SHA"
     paths:
       - bin
     policy: pull
