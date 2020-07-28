@@ -13,22 +13,22 @@ const DefaultConfigurationOptions: ConfigurationOptions = {
   },
 }
 
-export class Configuration<T extends ConfigurationOptions> {
+export class Configuration {
   private readonly configpath: string
 
-  constructor(path: string = process.cwd(), name: string) {
+  constructor(path: string = process.env.HOME || process.cwd(), name: string) {
     this.configpath = fs.join(path, name)
   }
 
-  async load(): Promise<ConfigurationOptions> {
+  async load<T extends ConfigurationOptions>(): Promise<T> {
     if (await fs.exists(this.configpath)) {
-      return fs.json<ConfigurationOptions>(this.configpath)
+      return fs.json<T>(this.configpath)
     }
 
-    return DefaultConfigurationOptions
+    return DefaultConfigurationOptions as T
   }
 
-  async save(configuration: ConfigurationOptions): Promise<void> {
+  async save<T extends ConfigurationOptions>(configuration: T): Promise<void> {
     await fs.save(this.configpath, configuration)
   }
 }
