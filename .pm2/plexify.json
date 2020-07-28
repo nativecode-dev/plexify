@@ -5,10 +5,10 @@
     "src"
   ],
   "env": {
-    "DEBUG": "*"
+    "DEBUG": "plexify:*"
   },
   "env_prod": {
-    "DEBUG": "*:plexify*",
+    "DEBUG": "plexify:*",
     "NODE_ENV": "production"
   }
 }
