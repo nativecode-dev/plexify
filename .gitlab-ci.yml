@@ -1,6 +1,7 @@
 image: nativecode/node-build:latest
 
 stages:
+  - build
   - prepare
   - publish
 
@@ -12,6 +13,19 @@ before_script:
   - echo -n $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
   - .citools/setup-git ${BUILD_REPO_BRANCH} ${BUILD_REPO_GIT} ${BUILD_REPO_EMAIL}
   - .citools/setup-ssh ${BUILD_REPO_DOMAIN} ${BUILD_REPO_SSHKEY_PATH} ${BUILD_REPO_DOMAIN_SSH}
+
+continuous:
+  stage: build
+  except:
+    - develop
+    - master
+    - tags
+  script:
+    - npm ci
+    - npm run build
+    - npx semantic-release
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
 
 prepare:
   stage: prepare
