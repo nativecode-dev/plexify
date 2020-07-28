@@ -42,23 +42,23 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    this.log.info('scan', 'gathering globs')
+    this.log.info('[scan] gathering globs')
 
     const unsorted = await fs.globs(this.globs, path)
-    this.log.trace('scan', 'unsorted', unsorted.length)
+    this.log.trace('[scan] unsorted', { length: unsorted.length })
 
     const sorted = this.applySort(unsorted, reverse)
-    this.log.trace('scan', 'sorted', sorted.length, reverse)
+    this.log.trace('[scan] sorted', sorted.length, reverse)
 
     const filtered = await this.applyAgeFilter(
       sorted.filter((filename) => filter(filename)),
       minutes,
     )
 
-    this.log.trace('scan', 'filtered', filtered.length)
+    this.log.trace('[scan] filtered', { lenght: filtered.length })
 
     const total = filtered.length
-    this.log.trace('scan', 'total', total)
+    this.log.trace('[scan] total', { total })
 
     this.emit(MediaScanner.events.start, total)
 

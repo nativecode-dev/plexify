@@ -15,7 +15,7 @@
   "scripts": {
     "build": "cli-tasks build",
     "build:docker": "cli-tasks build:docker",
-    "plexify": "ts-node --files --pretty src/index",
+    "plexify": "DEBUG=* ts-node --files --pretty src/index",
     "watch": "cli-tasks watch"
   },
   "husky": {
