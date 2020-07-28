@@ -20,9 +20,10 @@ prepare:
     - master
   script:
     - npm ci
-    - source .ci-env.sh
     - npm run build
     - npx semantic-release
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
 
 release:
   stage: publish
