@@ -42,6 +42,7 @@ export class MediaStore {
       return results.docs
     } catch (error) {
       this.log.error(new BError('all', error))
+      console.log(error)
       return []
     }
   }
