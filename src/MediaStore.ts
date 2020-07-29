@@ -1,4 +1,5 @@
 import os from 'os'
+import md5 from 'md5'
 import PouchDB from 'pouchdb'
 import Find from 'pouchdb-find'
 import Upsert from 'pouchdb-upsert'
@@ -78,7 +79,7 @@ export class MediaStore {
   }
 
   has(id: string, set: MediaInfo[]) {
-    return set.map((x) => x.filename).includes(this.ident(id))
+    return set.map((x) => x.filename).includes(this.cleanid(id))
   }
 
   hasFromSet(id: string, set: MediaInfo[]) {
@@ -141,10 +142,10 @@ export class MediaStore {
   }
 
   private cleanid(id: string): string {
-    return Buffer.from(this.ident(id)).toString('hex')
+    return md5(this.fileident(id))
   }
 
-  private ident(id: string) {
+  private fileident(id: string) {
     return fs.basename(id, false)
   }
 }

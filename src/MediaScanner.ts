@@ -89,7 +89,7 @@ export class MediaScanner extends EventEmitter {
             const document = await this.media.get(filename)
 
             if (document) {
-              return this.convertable(document, index, total)
+              return this.convertible(document, index, total)
             }
           }
 
@@ -105,7 +105,7 @@ export class MediaScanner extends EventEmitter {
 
           await this.media.upsert(filename, document)
 
-          return this.convertable(document, index, total)
+          return this.convertible(document, index, total)
         } catch (error) {
           this.log.error(new BError('scan', error), error)
         }
@@ -119,7 +119,7 @@ export class MediaScanner extends EventEmitter {
     return files.reduce<StreamFile[]>((results, file) => (file !== null ? [...results, file] : results), [])
   }
 
-  private async convertable(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
+  private async convertible(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
     try {
       const audio = this.findAudioStream(info.source)
       const video = this.findVideoStream(info.source)
