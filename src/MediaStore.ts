@@ -124,7 +124,7 @@ export class MediaStore {
   }
 
   private cleanid(id: string): string {
-    return btoa(this.ident(id))
+    return Buffer.from(this.ident(id)).toString('hex')
   }
 
   private ident(id: string) {
