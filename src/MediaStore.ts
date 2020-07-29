@@ -33,7 +33,7 @@ export class MediaStore {
 
     this.database = new PouchDB<MediaInfo>(COUCHDB_URL, options)
     this.log = logger.extend('storage')
-    this.log.trace(options)
+    this.log.trace('options', options)
   }
 
   async all(options?: PouchDB.Find.FindRequest<MediaInfo>) {
