@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  plexify-movies:
+    image: nativecode/plexify:v1.4.5
+    container_name: movies
+    command:
+      - scan
+      - /app/media
+      - processors 1
+    hostname: plexify
+    restart: unless-stopped
+    volumes:
+      - /mnt/movies:/app/media
+
+  plexify-other:
+    image: nativecode/plexify:v1.4.5
+    container_name: other
+    command:
+      - scan
+      - /app/media
+      - processors 1
+    hostname: plexify
+    restart: unless-stopped
+    volumes:
+      - /mnt/other:/app/media
+
+  plexify-shows:
+    image: nativecode/plexify:v1.4.5
+    container_name: shows
+    command:
+      - scan
+      - /app/media
+      - processors 1
+    hostname: plexify
+    restart: unless-stopped
+    volumes:
+      - /mnt/shows:/app/media

@@ -44,6 +44,9 @@ export class MediaScanner extends EventEmitter {
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
     const documents: MediaInfo[] = await this.media.all({
       selector: {
+        filepath: {
+          $regex: path,
+        },
         source: {
           streams: {
             $elemMatch: {
@@ -57,6 +60,8 @@ export class MediaScanner extends EventEmitter {
           },
         },
       },
+      limit: Number.MAX_SAFE_INTEGER,
+      skip: 0,
     })
 
     this.log.info('[scan] retrieving cached', { cached: documents.length })
@@ -66,23 +71,16 @@ export class MediaScanner extends EventEmitter {
     this.log.info('[scan] unsorted', { length: unsorted.length })
 
     const sorted = this.applySort(unsorted, reverse)
-    this.log.info('[scan] sorted', sorted.length, reverse)
+    this.log.info('[scan] sorted', { length: sorted.length, reverse })
 
-    const aged = await this.applyAgeFilter(
-      sorted.filter((filename) => filter(filename)),
-      minutes,
-    )
-
-    const filtered = aged.filter((filename) => documents.map((x) => x.filename).includes(filename) === false)
-    this.log.info('[scan] filtered', { length: filtered.length })
-
-    const total = filtered.length
+    const final = sorted
+    const total = final.length
     this.log.info('[scan] total', { total })
 
     this.emit(MediaScanner.events.start, total)
 
     const files = await Throttle(
-      filtered.map((fullname, index) => async () => {
+      final.map((fullname, index) => async () => {
         try {
           const filename = fs.basename(fullname)
           const filepath = fs.dirname(fullname)
