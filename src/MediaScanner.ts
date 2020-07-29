@@ -104,7 +104,7 @@ export class MediaScanner extends EventEmitter {
             source,
           })
 
-          console.log(await this.media.upsert(filename, document))
+          await this.media.upsert(filename, document)
 
           return this.convertable(document, index, total)
         } catch (error) {

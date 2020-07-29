@@ -42,7 +42,6 @@ export class MediaStore {
       return results.docs
     } catch (error) {
       this.log.error(new BError('all', error), error)
-      console.log(error)
       return []
     }
   }
@@ -54,7 +53,7 @@ export class MediaStore {
 
   async exists(id: string) {
     try {
-      const document = await this.database.get<MediaInfo>(id)
+      const document = await this.database.get(id)
       return document._id === this.cleanid(id)
     } catch (error) {
       this.log.error(new BError('exists', error), error)
@@ -64,7 +63,7 @@ export class MediaStore {
 
   async get(id: string) {
     try {
-      return await this.database.get<MediaInfo>(this.cleanid(id))
+      return await this.database.get(this.cleanid(id))
     } catch (error) {
       this.log.error(new BError('get', error), error)
       return null
@@ -89,7 +88,7 @@ export class MediaStore {
 
   async locked(id: string) {
     try {
-      const document = await this.database.get<MediaInfo>(this.cleanid(id))
+      const document = await this.database.get(this.cleanid(id))
       return document.locked === true && document.host !== os.hostname()
     } catch (error) {
       this.log.error(new BError('locked', error), error)
@@ -107,7 +106,7 @@ export class MediaStore {
   }
 
   async upsert(id: string, document: Partial<MediaInfo>) {
-    const results = await this.database.upsert<MediaInfo>(
+    const results = await this.database.upsert(
       this.cleanid(id),
       (target: MediaInfo) =>
         ({
