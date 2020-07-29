@@ -1,5 +1,4 @@
 import os from 'os'
-import btoa from 'btoa'
 import PouchDB from 'pouchdb'
 import Find from 'pouchdb-find'
 import Upsert from 'pouchdb-upsert'

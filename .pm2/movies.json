@@ -1,14 +1,11 @@
 {
   "name": "plexify-movies",
-  "script": "node bin/index.js convert /mnt/movies --disable-bars --processors 1",
-  "watch": [
-    "src"
-  ],
+  "script": "node bin/index.js convert /mnt/movies --processors 1",
+  "watch": [],
   "env": {
     "DEBUG": "plexify:*"
   },
   "env_prod": {
-    "DEBUG": "plexify:*:debug,info,warn",
-    "NODE_ENV": "production"
+    "DEBUG": "plexify:*:info,warn"
   }
 }

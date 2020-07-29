@@ -1,14 +1,11 @@
 {
   "name": "plexify-other",
-  "script": "node bin/index.js convert /mnt/other --disable-bars --processors 1",
-  "watch": [
-    "src"
-  ],
+  "script": "node bin/index.js convert /mnt/other --processors 1",
+  "watch": [],
   "env": {
     "DEBUG": "plexify:*"
   },
   "env_prod": {
-    "DEBUG": "plexify:*:debug,info,warn",
-    "NODE_ENV": "production"
+    "DEBUG": "plexify:*:info,warn"
   }
 }
