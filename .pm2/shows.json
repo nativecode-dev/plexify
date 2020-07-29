@@ -1,6 +1,6 @@
 {
   "name": "plexify-shows",
-  "script": "node bin/index.js convert /media/shows --disable-bars --processors 1",
+  "script": "node bin/index.js convert /mnt/shows --disable-bars --processors 1",
   "watch": [
     "src"
   ],
