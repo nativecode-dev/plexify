@@ -17,7 +17,7 @@ async function main() {
     .config(fs.join(filepath, 'plexify.json'))
     .parse()
 
-  Logger.trace(args)
+  Logger.trace('args', args)
 }
 
 main().catch((error) => Logger.error(new BError('catch-all', error)))

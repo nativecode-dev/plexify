@@ -42,27 +42,7 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    this.log.info('[scan] gathering globs')
-
-    const unsorted = await fs.globs(this.globs, path)
-    this.log.info('[scan] unsorted', { length: unsorted.length })
-
-    const sorted = this.applySort(unsorted, reverse)
-    this.log.info('[scan] sorted', sorted.length, reverse)
-
-    const filtered = await this.applyAgeFilter(
-      sorted.filter((filename) => filter(filename)),
-      minutes,
-    )
-
-    this.log.info('[scan] filtered', { length: filtered.length })
-
-    const total = filtered.length
-    this.log.info('[scan] total', { total })
-
-    this.emit(MediaScanner.events.start, total)
-
-    const documents = await this.media.all({
+    const documents: MediaInfo[] = await this.media.all({
       selector: {
         'source.streams': {
           $elemMatch: {
@@ -78,6 +58,28 @@ export class MediaScanner extends EventEmitter {
       fields: ['_id', 'filename'],
     })
 
+    this.log.info('[scan] retrieving cached', { cached: documents.length })
+
+    this.log.info('[scan] gathering globs')
+    const unsorted = await fs.globs(this.globs, path)
+
+    this.log.info('[scan] unsorted', { length: unsorted.length })
+    const sorted = this.applySort(unsorted, reverse)
+
+    this.log.info('[scan] sorted', sorted.length, reverse)
+
+    const filtered = await this.applyAgeFilter(
+      sorted.filter((filename) => filter(filename)),
+      minutes,
+    )
+
+    this.log.info('[scan] filtered', { length: filtered.length })
+
+    const total = filtered.length
+    this.log.info('[scan] total', { total })
+
+    this.emit(MediaScanner.events.start, total)
+
     const files = await Throttle(
       filtered.map((fullname, index) => async () => {
         try {
@@ -92,21 +94,21 @@ export class MediaScanner extends EventEmitter {
             }
           }
 
-          const info = await getMediaInfo(fullname)
+          const source = await getMediaInfo(fullname)
 
           const document: MediaInfo = this.media.document({
             filename,
             filepath,
             host: null,
             locked: false,
-            source: info,
+            source,
           })
 
           await this.media.upsert(filename, document)
 
           return this.convertable(document, index, total)
         } catch (error) {
-          this.log.error(new BError('scan', error))
+          this.log.error(new BError('scan', error), error)
         }
 
         return null
@@ -187,10 +189,14 @@ export class MediaScanner extends EventEmitter {
   }
 
   private findAudioStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type === 'audio').reduce((_, current) => current)
+    return data.streams
+      .filter((stream) => stream.codec_type === 'audio')
+      .reduce<FfprobeStream | any>((_, current) => current, {})
   }
 
   private findVideoStream(data: FfprobeData): FfprobeStream {
-    return data.streams.filter((stream) => stream.codec_type === 'video').reduce((_, current) => current)
+    return data.streams
+      .filter((stream) => stream.codec_type === 'video')
+      .reduce<FfprobeStream | any>((_, current) => current, {})
   }
 }

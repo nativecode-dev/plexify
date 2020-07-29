@@ -1,5 +1,6 @@
 import { Arguments, CommandBuilder } from 'yargs'
 
+import { BError } from 'berror'
 import { BarManager } from '../BarManager'
 import { BaseCommand } from './BaseCommand'
 import { ScanOptions } from '../Options/ScanOptions'
@@ -24,11 +25,15 @@ export class ScanCommand extends BaseCommand<ScanOptions> {
   }
 
   handler = async (args: Arguments<ScanOptions>) => {
-    const bars = new BarManager(args)
-    const results = await this.scan(args, bars)
+    try {
+      const bars = new BarManager(args)
+      const results = await this.scan(args, bars)
 
-    if (args.disableBars) {
-      console.log(JSON.stringify(results))
+      if (args.disableBars) {
+        console.log(JSON.stringify(results))
+      }
+    } catch (error) {
+      throw new BError('fatal', error)
     }
   }
 }
