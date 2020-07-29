@@ -46,6 +46,10 @@ export class MediaStore {
     }
   }
 
+  dbinfo() {
+    return this.database.info()
+  }
+
   document(doc: Partial<MediaInfo>): MediaInfo {
     const document: MediaInfo = { ...doc, _id: this.cleanid(doc.filename!) } as MediaInfo
     return document
@@ -110,6 +114,7 @@ export class MediaStore {
       this.cleanid(id),
       (target: MediaInfo) =>
         ({
+          ...{ _id: this.cleanid(id) },
           ...target,
           ...document,
         } as MediaInfo),
