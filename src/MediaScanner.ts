@@ -77,17 +77,17 @@ export class MediaScanner extends EventEmitter {
     // )
     // this.log.info('[scan] aged', { length: aged.length })
 
-    const filenames = documents.map((doc) => doc.filename)
-    const filtered = sorted.filter((filename) => filenames.includes(filename) === false)
-    this.log.info('[scan] filtered', { length: filtered.length })
+    // const filtered = sorted.filter((filename) => this.media.has(filename, documents))
+    // this.log.info('[scan] filtered', { length: filtered.length })
 
-    const total = filtered.length
+    const final = sorted
+    const total = final.length
     this.log.info('[scan] total', { total })
 
     this.emit(MediaScanner.events.start, total)
 
     const files = await Throttle(
-      filtered.map((fullname, index) => async () => {
+      final.map((fullname, index) => async () => {
         try {
           const filename = fs.basename(fullname)
           const filepath = fs.dirname(fullname)
