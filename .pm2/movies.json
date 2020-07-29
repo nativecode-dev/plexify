@@ -6,6 +6,6 @@
     "DEBUG": "plexify:*"
   },
   "env_prod": {
-    "DEBUG": "plexify:*:info,warn"
+    "DEBUG": "plexify:*:error,info,warn"
   }
 }
