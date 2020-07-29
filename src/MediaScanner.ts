@@ -60,6 +60,8 @@ export class MediaScanner extends EventEmitter {
           },
         },
       },
+      limit: Number.MAX_SAFE_INTEGER,
+      skip: 0,
     })
 
     this.log.info('[scan] retrieving cached', { cached: documents.length })
