@@ -1,6 +1,6 @@
 {
   "name": "plexify-other",
-  "script": "node bin/index.js convert /media/other --disable-bars --processors 2",
+  "script": "node bin/index.js convert /media/other --disable-bars --processors 1",
   "watch": [
     "src"
   ],
