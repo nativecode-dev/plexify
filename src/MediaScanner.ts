@@ -108,7 +108,7 @@ export class MediaScanner extends EventEmitter {
 
           return this.convertable(document, index, total)
         } catch (error) {
-          this.log.error(new BError('scan', error))
+          this.log.error(new BError('scan', error), error)
         }
 
         return null
