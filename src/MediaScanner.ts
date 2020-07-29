@@ -73,15 +73,6 @@ export class MediaScanner extends EventEmitter {
     const sorted = this.applySort(unsorted, reverse)
     this.log.info('[scan] sorted', { length: sorted.length, reverse })
 
-    // const aged = await this.applyAgeFilter(
-    //   sorted.filter((filename) => filter(filename)),
-    //   minutes,
-    // )
-    // this.log.info('[scan] aged', { length: aged.length })
-
-    // const filtered = sorted.filter((filename) => this.media.has(filename, documents))
-    // this.log.info('[scan] filtered', { length: filtered.length })
-
     const final = sorted
     const total = final.length
     this.log.info('[scan] total', { total })
