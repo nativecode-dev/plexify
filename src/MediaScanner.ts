@@ -44,13 +44,15 @@ export class MediaScanner extends EventEmitter {
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
     const documents: MediaInfo[] = await this.media.all({
       selector: {
-        'source.streams': {
-          $elemMatch: {
-            codec_name: {
-              $ne: 'hevc',
-            },
-            codec_type: {
-              $eq: 'video',
+        source: {
+          streams: {
+            $elemMatch: {
+              codec_name: {
+                $ne: 'hevc',
+              },
+              codec_type: {
+                $eq: 'video',
+              },
             },
           },
         },
