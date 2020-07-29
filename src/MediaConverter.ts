@@ -68,12 +68,10 @@ export class MediaConverter extends EventEmitter {
         return this.complete(resolve, reject, context)
       }
 
-      this.log.trace(
-        'original',
-        fs.basename(context.filename.original),
-        'converted',
-        fs.basename(context.filename.converted),
-      )
+      this.log.info('[convert]', {
+        original: fs.basename(context.filename.original),
+        converted: fs.basename(context.filename.converted),
+      })
 
       return ffmpeg()
         .addInput(file.fullpath)

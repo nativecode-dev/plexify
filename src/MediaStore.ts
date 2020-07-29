@@ -46,6 +46,10 @@ export class MediaStore {
     }
   }
 
+  bulk(batch: MediaInfo[]) {
+    return this.database.bulkDocs(batch)
+  }
+
   dbinfo() {
     return this.database.info()
   }

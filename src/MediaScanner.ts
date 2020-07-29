@@ -55,7 +55,6 @@ export class MediaScanner extends EventEmitter {
           },
         },
       },
-      fields: ['_id', 'filename'],
     })
 
     this.log.info('[scan] retrieving cached', { cached: documents.length })
