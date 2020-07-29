@@ -58,20 +58,20 @@ export class MediaScanner extends EventEmitter {
     })
 
     this.log.info('[scan] retrieving cached', { cached: documents.length })
-
     this.log.info('[scan] gathering globs')
+
     const unsorted = await fs.globs(this.globs, path)
-
     this.log.info('[scan] unsorted', { length: unsorted.length })
-    const sorted = this.applySort(unsorted, reverse)
 
+    const sorted = this.applySort(unsorted, reverse)
     this.log.info('[scan] sorted', sorted.length, reverse)
 
-    const filtered = await this.applyAgeFilter(
+    const aged = await this.applyAgeFilter(
       sorted.filter((filename) => filter(filename)),
       minutes,
     )
 
+    const filtered = aged.filter((filename) => documents.map((x) => x.filename).includes(filename) === false)
     this.log.info('[scan] filtered', { length: filtered.length })
 
     const total = filtered.length

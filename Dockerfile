@@ -6,7 +6,7 @@ COPY /bin /app/bin
 COPY /package-lock.json /app
 COPY /package.json /app
 
-ENV DEBUG *
+ENV DEBUG "plexify:*:debug,error,info,warn"
 
 RUN set -e \
   && apk --update --no-cache add bash curl ffmpeg git grep jq x265-libs \
