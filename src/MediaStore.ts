@@ -22,13 +22,13 @@ export class MediaStore {
   private readonly log: Lincoln
 
   constructor(logger: Lincoln) {
-    const options = {
+    const options: PouchDB.Configuration.RemoteDatabaseConfiguration = {
       adapter: 'http',
       auth: {
         password: process.env.PLEXIFY_COUCHDB_PASSWORD || 'guest',
         username: process.env.PLEXIFY_COUCHDB_USERNAME || 'guest',
       },
-      name: COUCHDB_URL,
+      name: fs.basename(COUCHDB_URL),
     }
 
     this.database = new PouchDB<MediaInfo>(COUCHDB_URL, options)
