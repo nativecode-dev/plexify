@@ -41,14 +41,15 @@ export class MediaStore {
       const results = await this.database.find(options || { selector: {} })
       return results.docs
     } catch (error) {
-      this.log.error(new BError('all', error))
+      this.log.error(new BError('all', error), error)
       console.log(error)
       return []
     }
   }
 
   document(doc: Partial<MediaInfo>): MediaInfo {
-    return { ...doc, _id: this.cleanid(doc.filename!) } as MediaInfo
+    const document: MediaInfo = { ...doc, _id: this.cleanid(doc.filename!) } as MediaInfo
+    return document
   }
 
   async exists(id: string) {
@@ -56,7 +57,7 @@ export class MediaStore {
       const document = await this.database.get<MediaInfo>(id)
       return document._id === this.cleanid(id)
     } catch (error) {
-      this.log.error(new BError('exists', error))
+      this.log.error(new BError('exists', error), error)
       return false
     }
   }
@@ -65,7 +66,7 @@ export class MediaStore {
     try {
       return await this.database.get<MediaInfo>(this.cleanid(id))
     } catch (error) {
-      this.log.error(new BError('get', error))
+      this.log.error(new BError('get', error), error)
       return null
     }
   }
@@ -82,7 +83,7 @@ export class MediaStore {
     try {
       return await this.upsert(this.cleanid(id), { source, ...{ locked: true, host: os.hostname() } })
     } catch (error) {
-      this.log.error(new BError('lock', error))
+      this.log.error(new BError('lock', error), error)
     }
   }
 
@@ -91,7 +92,7 @@ export class MediaStore {
       const document = await this.database.get<MediaInfo>(this.cleanid(id))
       return document.locked === true && document.host !== os.hostname()
     } catch (error) {
-      this.log.error(new BError('locked', error))
+      this.log.error(new BError('locked', error), error)
       return false
     }
   }
@@ -101,7 +102,7 @@ export class MediaStore {
       this.log.trace('unlocked', this.cleanid(id))
       return await this.upsert(this.cleanid(id), { source, ...{ locked: false, host: null } })
     } catch (error) {
-      this.log.error(new BError('unlock', error))
+      this.log.error(new BError('unlock', error), error)
     }
   }
 
