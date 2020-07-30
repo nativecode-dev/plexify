@@ -143,10 +143,14 @@ export class MediaStore {
   }
 
   private cleanid(id: string): string {
-    return md5(this.fileident(id))
+    const hash = md5(this.fileident(id))
+    this.log.trace('cleanid', { id, hash })
+    return hash
   }
 
   private fileident(id: string) {
-    return fs.basename(id, false)
+    const ident = fs.basename(id, false)
+    this.log.trace('fileident', { id, ident })
+    return ident
   }
 }
