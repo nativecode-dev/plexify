@@ -36,13 +36,11 @@ export class MediaConverter extends EventEmitter {
 
   convert(file: StreamFile, preset: string, format: string, dryrun: boolean): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-      const id = fs.basename(file.fullpath, false)
-
-      if (await this.store.locked(id)) {
+      if (await this.store.locked(file.fullpath)) {
         return
       }
 
-      await this.store.lock(id, file.data)
+      await this.store.lock(file.fullpath, file.data)
 
       const context: FileContext = {
         dryrun,
@@ -87,7 +85,7 @@ export class MediaConverter extends EventEmitter {
           this.log.error(new BError('convert', error))
           this.log.trace(stdout)
           this.log.trace(stderr)
-          await this.store.unlock(id, context.file.data)
+          await this.store.unlock(file.fullpath, context.file.data)
           reject(new MediaError(stdout, stderr, error))
         })
         .run()
@@ -118,9 +116,8 @@ export class MediaConverter extends EventEmitter {
         this.log.trace('rename', fs.basename(context.filename.processing), fs.basename(context.filename.converted))
       }
 
-      const id = fs.basename(context.filename.original, false)
       const data = await getMediaInfo(context.filename.converted)
-      await this.store.unlock(id, data)
+      await this.store.unlock(context.file.fullpath, data)
 
       this.emit(MediaConverter.events.stop)
       resolve()
