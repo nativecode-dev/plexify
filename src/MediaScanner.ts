@@ -28,7 +28,7 @@ export class MediaScanner extends EventEmitter {
 
   private readonly globs: string[]
   private readonly log: Lincoln
-  private readonly media: MediaStore
+  private readonly store: MediaStore
 
   constructor(
     logger: Lincoln,
@@ -38,11 +38,11 @@ export class MediaScanner extends EventEmitter {
     super()
     this.globs = allowedExtensions.map((glob) => `**/*.${glob}`)
     this.log = logger.extend('scanner')
-    this.media = new MediaStore(logger)
+    this.store = new MediaStore(logger)
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    const documents: MediaInfo[] = await this.media.all({
+    const documents: MediaInfo[] = await this.store.all({
       selector: {
         filepath: {
           $regex: path,
@@ -85,8 +85,8 @@ export class MediaScanner extends EventEmitter {
           const filename = fs.basename(fullname)
           const filepath = fs.dirname(fullname)
 
-          if (this.media.has(filename, documents)) {
-            const document = await this.media.get(filename)
+          if (this.store.has(filename, documents)) {
+            const document = await this.store.get(filename)
 
             if (document) {
               return this.convertible(document, index, total)
@@ -95,7 +95,7 @@ export class MediaScanner extends EventEmitter {
 
           const source = await getMediaInfo(fullname)
 
-          const document: MediaInfo = this.media.document({
+          const document: MediaInfo = this.store.document({
             filename,
             filepath,
             host: null,
@@ -103,7 +103,7 @@ export class MediaScanner extends EventEmitter {
             source,
           })
 
-          await this.media.upsert(filename, document)
+          await this.store.upsert(filename, document)
 
           return this.convertible(document, index, total)
         } catch (error) {
@@ -127,7 +127,7 @@ export class MediaScanner extends EventEmitter {
       const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
       const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
 
-      const locked = await this.media.locked(info.filename)
+      const locked = await this.store.locked(info.filename)
       this.log.trace(info.filename, { locked, index, total })
       this.emit(MediaScanner.events.progress, info.filename, locked)
 

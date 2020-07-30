@@ -61,8 +61,9 @@ export class MediaStore {
 
   async exists(id: string) {
     try {
-      const document = await this.database.get(id)
-      const exists = document._id === this.cleanid(id)
+      const key = this.cleanid(id)
+      const document = await this.database.get(key)
+      const exists = document._id === key
       this.log.trace('exists', { id, docid: document._id, exists })
       return exists
     } catch (error) {
@@ -80,13 +81,13 @@ export class MediaStore {
     }
   }
 
-  has(filename: string, set: MediaInfo[]) {
-    return set.map((x) => x.filename).includes(fs.basename(filename))
+  has(id: string, set: MediaInfo[]) {
+    return set.map((x) => x._id).includes(this.cleanid(id))
   }
 
   async lock(id: string, source: FfprobeData) {
     try {
-      const document = await this.get(id)
+      const document = await this.get(this.cleanid(id))
 
       if (document) {
         document.host = os.hostname()
@@ -102,7 +103,7 @@ export class MediaStore {
 
   async locked(id: string) {
     try {
-      const document = await this.database.get(id)
+      const document = await this.database.get(this.cleanid(id))
       return document.locked === true && document.host !== os.hostname()
     } catch (error) {
       this.log.error(new BError('locked', error), error)
@@ -112,7 +113,7 @@ export class MediaStore {
 
   async unlock(id: string, source: FfprobeData) {
     try {
-      const document = await this.get(id)
+      const document = await this.get(this.cleanid(id))
 
       if (document) {
         document.host = null
