@@ -128,7 +128,7 @@ export class MediaScanner extends EventEmitter {
       const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
 
       const locked = await this.media.locked(info.filename)
-      this.log.trace(info.filename, 'lock-status', locked, 'progress', index, total)
+      this.log.trace(info.filename, { locked, index, total })
       this.emit(MediaScanner.events.progress, info.filename, locked)
 
       if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {
