@@ -62,7 +62,9 @@ export class MediaStore {
   async exists(id: string) {
     try {
       const document = await this.database.get(id)
-      return document._id === this.cleanid(id)
+      const exists = document._id === this.cleanid(id)
+      this.log.trace('exists', { id, docid: document._id, exists })
+      return exists
     } catch (error) {
       this.log.error(new BError('exists', error), error)
       return false
@@ -78,12 +80,8 @@ export class MediaStore {
     }
   }
 
-  has(id: string, set: MediaInfo[]) {
-    return set.map((x) => x.filename).includes(this.cleanid(id))
-  }
-
-  hasFromSet(id: string, set: MediaInfo[]) {
-    return set.map((x) => x._id).includes(this.cleanid(id))
+  has(filename: string, set: MediaInfo[]) {
+    return set.map((x) => x.filename).includes(fs.basename(filename))
   }
 
   async lock(id: string, source: FfprobeData) {
@@ -129,26 +127,31 @@ export class MediaStore {
   }
 
   async upsert(id: string, document: Partial<MediaInfo>) {
-    const results = await this.database.upsert(
-      this.cleanid(id),
-      (target: MediaInfo) =>
-        ({
-          ...{ _id: this.cleanid(id) },
-          ...target,
-          ...document,
-        } as MediaInfo),
-    )
+    const key = this.cleanid(id)
 
-    return results
+    const response = await this.database.upsert(key, (target: MediaInfo) => ({
+      ...target,
+      ...document,
+    }))
+
+    return response
   }
 
   private cleanid(id: string): string {
+    if (id.startsWith('id-')) {
+      return id
+    }
+
     const hash = md5(this.fileident(id))
     this.log.trace('cleanid', { id, hash })
-    return hash
+    return `id-${hash}`
   }
 
   private fileident(id: string) {
+    if (id.startsWith('id-')) {
+      return id
+    }
+
     const ident = fs.basename(id, false)
     this.log.trace('fileident', { id, ident })
     return ident
