@@ -28,7 +28,7 @@ export class MediaScanner extends EventEmitter {
 
   private readonly globs: string[]
   private readonly log: Lincoln
-  private readonly media: MediaStore
+  private readonly store: MediaStore
 
   constructor(
     logger: Lincoln,
@@ -38,11 +38,11 @@ export class MediaScanner extends EventEmitter {
     super()
     this.globs = allowedExtensions.map((glob) => `**/*.${glob}`)
     this.log = logger.extend('scanner')
-    this.media = new MediaStore(logger)
+    this.store = new MediaStore(logger)
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
-    const documents: MediaInfo[] = await this.media.all({
+    const documents: MediaInfo[] = await this.store.all({
       selector: {
         filepath: {
           $regex: path,
@@ -85,17 +85,17 @@ export class MediaScanner extends EventEmitter {
           const filename = fs.basename(fullname)
           const filepath = fs.dirname(fullname)
 
-          if (this.media.has(filename, documents)) {
-            const document = await this.media.get(filename)
+          if (this.store.has(filename, documents)) {
+            const document = await this.store.get(filename)
 
             if (document) {
-              return this.convertable(document, index, total)
+              return this.convertible(document, index, total)
             }
           }
 
           const source = await getMediaInfo(fullname)
 
-          const document: MediaInfo = this.media.document({
+          const document: MediaInfo = this.store.document({
             filename,
             filepath,
             host: null,
@@ -103,9 +103,9 @@ export class MediaScanner extends EventEmitter {
             source,
           })
 
-          await this.media.upsert(filename, document)
+          await this.store.upsert(filename, document)
 
-          return this.convertable(document, index, total)
+          return this.convertible(document, index, total)
         } catch (error) {
           this.log.error(new BError('scan', error), error)
         }
@@ -119,7 +119,7 @@ export class MediaScanner extends EventEmitter {
     return files.reduce<StreamFile[]>((results, file) => (file !== null ? [...results, file] : results), [])
   }
 
-  private async convertable(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
+  private async convertible(info: MediaInfo, index: number, total: number): Promise<StreamFile | null> {
     try {
       const audio = this.findAudioStream(info.source)
       const video = this.findVideoStream(info.source)
@@ -127,8 +127,8 @@ export class MediaScanner extends EventEmitter {
       const audioCodeDisallowed = this.codec_allowed(audio.codec_name) === false
       const videoCodecDisallowed = this.codec_allowed(video.codec_name) === false
 
-      const locked = await this.media.locked(info.filename)
-      this.log.trace(info.filename, 'lock-status', locked, 'progress', index, total)
+      const locked = await this.store.locked(info.filename)
+      this.log.trace(info.filename, { locked, index, total })
       this.emit(MediaScanner.events.progress, info.filename, locked)
 
       if ((audioCodeDisallowed || videoCodecDisallowed) && locked === false) {

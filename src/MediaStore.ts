@@ -1,4 +1,5 @@
 import os from 'os'
+import md5 from 'md5'
 import PouchDB from 'pouchdb'
 import Find from 'pouchdb-find'
 import Upsert from 'pouchdb-upsert'
@@ -60,8 +61,11 @@ export class MediaStore {
 
   async exists(id: string) {
     try {
-      const document = await this.database.get(id)
-      return document._id === this.cleanid(id)
+      const key = this.cleanid(id)
+      const document = await this.database.get(key)
+      const exists = document._id === key
+      this.log.trace('exists', { id, docid: document._id, exists })
+      return exists
     } catch (error) {
       this.log.error(new BError('exists', error), error)
       return false
@@ -78,22 +82,19 @@ export class MediaStore {
   }
 
   has(id: string, set: MediaInfo[]) {
-    return set.map((x) => x.filename).includes(this.ident(id))
-  }
-
-  hasFromSet(id: string, set: MediaInfo[]) {
     return set.map((x) => x._id).includes(this.cleanid(id))
   }
 
   async lock(id: string, source: FfprobeData) {
     try {
-      const document = await this.get(id)
+      const document = await this.get(this.cleanid(id))
 
       if (document) {
         document.host = os.hostname()
         document.locked = true
         document.source = source
-        await this.upsert(this.cleanid(id), document)
+        await this.upsert(document._id, document)
+        this.log.trace('locked', { id, document })
       }
     } catch (error) {
       this.log.error(new BError('lock', error), error)
@@ -112,14 +113,14 @@ export class MediaStore {
 
   async unlock(id: string, source: FfprobeData) {
     try {
-      this.log.trace('unlocked', this.cleanid(id))
-      const document = await this.get(id)
+      const document = await this.get(this.cleanid(id))
 
       if (document) {
         document.host = null
         document.locked = false
         document.source = source
-        await this.upsert(this.cleanid(id), document)
+        await this.upsert(document._id, document)
+        this.log.trace('unlocked', { id, document })
       }
     } catch (error) {
       this.log.error(new BError('unlock', error), error)
@@ -127,24 +128,33 @@ export class MediaStore {
   }
 
   async upsert(id: string, document: Partial<MediaInfo>) {
-    const results = await this.database.upsert(
-      this.cleanid(id),
-      (target: MediaInfo) =>
-        ({
-          ...{ _id: this.cleanid(id) },
-          ...target,
-          ...document,
-        } as MediaInfo),
-    )
+    const key = this.cleanid(id)
 
-    return results
+    const response = await this.database.upsert(key, (target: MediaInfo) => ({
+      ...target,
+      ...document,
+    }))
+
+    return response
   }
 
   private cleanid(id: string): string {
-    return Buffer.from(this.ident(id)).toString('hex')
+    if (id.startsWith('id-')) {
+      return id
+    }
+
+    const hash = md5(this.fileident(id))
+    this.log.trace('cleanid', { id, hash })
+    return `id-${hash}`
   }
 
-  private ident(id: string) {
-    return fs.basename(id, false)
+  private fileident(id: string) {
+    if (id.startsWith('id-')) {
+      return id
+    }
+
+    const ident = fs.basename(id, false)
+    this.log.trace('fileident', { id, ident })
+    return ident
   }
 }
