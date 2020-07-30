@@ -94,7 +94,8 @@ export class MediaStore {
         document.host = os.hostname()
         document.locked = true
         document.source = source
-        await this.upsert(this.cleanid(id), document)
+        await this.upsert(document._id, document)
+        this.log.trace('locked', { id, document })
       }
     } catch (error) {
       this.log.error(new BError('lock', error), error)
@@ -103,7 +104,7 @@ export class MediaStore {
 
   async locked(id: string) {
     try {
-      const document = await this.database.get(this.cleanid(id))
+      const document = await this.database.get(id)
       return document.locked === true && document.host !== os.hostname()
     } catch (error) {
       this.log.error(new BError('locked', error), error)
@@ -113,14 +114,14 @@ export class MediaStore {
 
   async unlock(id: string, source: FfprobeData) {
     try {
-      this.log.trace('unlocked', this.cleanid(id))
       const document = await this.get(id)
 
       if (document) {
         document.host = null
         document.locked = false
         document.source = source
-        await this.upsert(this.cleanid(id), document)
+        await this.upsert(document._id, document)
+        this.log.trace('unlocked', { id, document })
       }
     } catch (error) {
       this.log.error(new BError('unlock', error), error)
