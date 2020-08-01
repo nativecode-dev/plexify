@@ -42,6 +42,8 @@ export class MediaScanner extends EventEmitter {
   }
 
   async scan(path: string, minutes: number = 0, reverse: boolean = false, filter: MediaFileNameFilter = DefaultFilter) {
+    const info = await this.store.dbinfo()
+
     const documents: MediaInfo[] = await this.store.all({
       selector: {
         filepath: {
@@ -60,7 +62,7 @@ export class MediaScanner extends EventEmitter {
           },
         },
       },
-      limit: Number.MAX_SAFE_INTEGER,
+      limit: info.doc_count,
       skip: 0,
     })
 
