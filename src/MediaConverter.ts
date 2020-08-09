@@ -71,7 +71,7 @@ export class MediaConverter extends EventEmitter {
         converted: fs.basename(context.filename.converted),
       })
 
-      return ffmpeg()
+      const exe = ffmpeg()
         .addInput(file.fullpath)
         .addOutput(context.filename.processing)
         .outputFormat(this.format)
@@ -88,7 +88,8 @@ export class MediaConverter extends EventEmitter {
           await this.store.unlock(file.fullpath, context.file.data)
           reject(new MediaError(stdout, stderr, error))
         })
-        .run()
+
+      return exe.run()
     })
   }
 

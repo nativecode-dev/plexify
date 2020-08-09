@@ -15,12 +15,12 @@ import { PlexifyOptions } from '../Options/PlexifyOptions'
 import { ConvertOptions } from '../Options/ConvertOptions'
 
 export abstract class BaseCommand<T extends PlexifyOptions> implements CommandModule<{}, T> {
-  protected log: Lincoln = Logger.extend('command')
-
   abstract aliases: string[]
   abstract command: string
   abstract builder: CommandBuilder<{}, T>
   abstract handler(args: Arguments<T>): void
+
+  protected log: Lincoln = Logger.extend('command')
 
   protected async scan(args: ScanOptions, bars: BarManager) {
     const scanbar = 'scanner'
