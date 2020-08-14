@@ -27,7 +27,7 @@ export class MediaConverter extends EventEmitter {
     logger: Lincoln,
     private readonly format: string = 'mp4',
     private readonly audioCodec: string = 'aac',
-    private readonly videoCodec: string = 'libx265',
+    private readonly videoCodec: string = 'hevc_vaapi',
   ) {
     super()
     this.log = logger.extend('converter')
