@@ -72,6 +72,9 @@ export class MediaConverter extends EventEmitter {
       })
 
       const exe = ffmpeg()
+        .withOption('-hwaccel vaapi')
+        .withOption('-hwaccel_device /dev/dri/renderD128')
+        .withOption('-hwaccel_output_format vaapi')
         .addInput(file.fullpath)
         .addOutput(context.filename.processing)
         .outputFormat(this.format)
